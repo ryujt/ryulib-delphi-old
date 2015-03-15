@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet version="1.0">
+  <view uin="sys3d9ss5fh_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:PlayCap:WebCam.TCapturedEvent">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="20,20,104,38" />
+      <property name="location_set_by_user" value="True" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:PlayCap:WebCam.TWebCamCtrl">
+      <property name="$shortcutReference" value="true" />
+      <property name="bounds" value="160,20,188,234" />
+      <property name="location_set_by_user" value="True" />
+      <reference referencedUin="delphi:e_field:src:PlayCap:WebCam.TWebCamCtrl.FActive">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_field:src:PlayCap:WebCam.TWebCamCtrl.VideoGrabber" />
+      <reference referencedUin="delphi:e_method:src:PlayCap:WebCam.TWebCamCtrl.VideoGrabberFrameCaptureCompleted(System.TObject,Graphics.TBitmap,System.Integer,System.Integer,System.Cardinal,System.Int64,VidGrab.TFrameCaptureDest,System.string,System.Boolean,System.Integer)">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_property:src:PlayCap:WebCam.TWebCamCtrl.Resolution" />
+      <reference referencedUin="delphi:e_method:src:PlayCap:WebCam.TWebCamCtrl.VideoGrabberVideoDeviceSelected(System.TObject)">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_field:src:PlayCap:WebCam.TWebCamCtrl.FDeviceList">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_field:src:PlayCap:WebCam.TWebCamCtrl.FCS">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_method:src:PlayCap:WebCam.TWebCamCtrl.Stop()" />
+      <reference referencedUin="delphi:e_field:src:PlayCap:WebCam.TWebCamCtrl.FCaptureID">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_property:src:PlayCap:WebCam.TWebCamCtrl.Active" />
+      <reference referencedUin="delphi:e_field:src:PlayCap:WebCam.TWebCamCtrl.FOnCaptured">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_method:src:PlayCap:WebCam.TWebCamCtrl.SnapShot(Graphics.TBitmap)" />
+      <reference referencedUin="delphi:e_property:src:PlayCap:WebCam.TWebCamCtrl.DeviceList" />
+      <reference referencedUin="delphi:e_method:src:PlayCap:WebCam.TWebCamCtrl.Create(Classes.TComponent)">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_method:src:PlayCap:WebCam.TWebCamCtrl.Start()" />
+      <reference referencedUin="delphi:e_field:src:PlayCap:WebCam.TWebCamCtrl.FCapturedBitmap">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_property:src:PlayCap:WebCam.TWebCamCtrl.OnCaptured" />
+      <reference referencedUin="delphi:e_method:src:PlayCap:WebCam.TWebCamCtrl.Destroy()">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_field:src:PlayCap:WebCam.TWebCamCtrl.FResolutionList">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_field:src:PlayCap:WebCam.TWebCamCtrl.FOldCaptureID">
+        <property name="$hidden" value="True" />
+      </reference>
+      <reference referencedUin="delphi:e_property:src:PlayCap:WebCam.TWebCamCtrl.DeviceNo" />
+      <reference referencedUin="delphi:e_property:src:PlayCap:WebCam.TWebCamCtrl.ResolutionList" />
+      <reference referencedUin="delphi:e_method:src:PlayCap:WebCam.TWebCamCtrl.Capture()" />
+      <reference referencedUin="delphi:l_ast:src:PlayCap:WebCam.TWebCamCtrl.OnCaptured">
+        <property name="sourceAnchor" value="160,39" />
+        <property name="targetAnchor" value="124,39" />
+        <property name="bendpoints" value="" />
+      </reference>
+      <reference referencedUin="delphi:l_ast:src:PlayCap:WebCam.TWebCamCtrl.FOnCaptured">
+        <property name="sourceAnchor" value="160,31" />
+        <property name="targetAnchor" value="124,31" />
+        <property name="bendpoints" value="" />
+      </reference>
+    </reference>
+    <reference referencedUin="delphi:e_class:src:PlayCap:WebCam.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:PlayCap:WebCam.@unitclass.WM_CAPTURECOMPLETE" />
+    </reference>
+  </view>
+</nodeSet>

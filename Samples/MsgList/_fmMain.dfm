@@ -1,0 +1,59 @@
+object fmMain: TfmMain
+  Left = 0
+  Top = 0
+  Caption = 'fmMain'
+  ClientHeight = 293
+  ClientWidth = 426
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Panel1: TPanel
+    Left = 0
+    Top = 41
+    Width = 426
+    Height = 252
+    Align = alClient
+    BevelOuter = bvNone
+    TabOrder = 0
+    ExplicitLeft = 8
+    ExplicitTop = 112
+    ExplicitWidth = 217
+    ExplicitHeight = 197
+  end
+  object Panel2: TPanel
+    Left = 0
+    Top = 0
+    Width = 426
+    Height = 41
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 1
+    ExplicitLeft = 256
+    ExplicitTop = 8
+    ExplicitWidth = 185
+    object Button1: TButton
+      Left = 8
+      Top = 9
+      Width = 75
+      Height = 25
+      Caption = 'Button1'
+      TabOrder = 0
+      OnClick = Button1Click
+    end
+    object Button2: TButton
+      Left = 89
+      Top = 9
+      Width = 75
+      Height = 25
+      Caption = 'Button2'
+      TabOrder = 1
+    end
+  end
+end
