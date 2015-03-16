@@ -6,7 +6,7 @@ unit RyuLibBase;
 interface
 
 uses
-  Windows, Classes, SysUtils;
+  Windows, Classes, SysUtils, Types;
 
 type
   TScreenSize = record
@@ -38,7 +38,6 @@ type
   private
     FSize: integer;
     FData: pointer;
-    function GetToString: string;
   public
     Tag: DWord;
 
@@ -51,10 +50,11 @@ type
     destructor Destroy; override;
 
     procedure Assign(AMemory:TMemory);
+
+    function ToString:string; override;
   public
     property Data : pointer read FData;
     property Size : integer read FSize;
-    property ToString:string read GetToString;
   end;
 
   TObjectClass = class of TObject;
@@ -199,7 +199,7 @@ begin
   inherited;
 end;
 
-function TMemory.GetToString: string;
+function TMemory.ToString: string;
 begin
   Result := DataToText( FData, FSize );
 end;

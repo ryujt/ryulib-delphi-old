@@ -180,7 +180,7 @@ begin
   Result := '';
   if FJSONObject = nil then Exit;
 
-  Result := TJSONPair(FJSONObject.Get(Index)).JsonString.Value;
+  Result := TJSONPair(FJSONObject.Pairs[Index]).JsonString.Value;
 end;
 
 function TJsonData.GetCount: integer;
@@ -188,7 +188,7 @@ begin
   Result := 0;
   if FJSONObject = nil then Exit;
 
-  Result := FJSONObject.Size
+  Result := FJSONObject.Count
 end;
 
 function TJsonData.GetText: string;

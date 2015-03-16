@@ -4,7 +4,7 @@ unit ThreadUtils;
 interface
 
 uses
-  Windows, SysUtils, Classes, SyncObjs;
+  Windows, SysUtils, Classes, SyncObjs, Types;
 
 procedure AddThreadObject(AHandle:THandle);
 procedure RemoveThreadObject(AHandle:THandle);
