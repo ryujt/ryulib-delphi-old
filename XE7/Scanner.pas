@@ -10,15 +10,25 @@ const
 
 type
   TTokenType = (
-    ttNone, ttSpecialChar, ttString, ttNumber, ttIdentifier
+    ttNone, ttWhiteSpace, ttSpecialChar, ttString, ttNumber, ttIdentifier, ttComment
   );
 
   TToken = record
+  strict private
+    FOriginalText : string;
+  private
+    FLowerCaseText: string;
+    procedure SetText(const AText:string);
+    function GetText: string;
+    function GetLowerCaseText: string;
+  public
     Line :integer;
     Col : integer;
     TokenType : TTokenType;
-    Text : string;
-    function LowerCaseText:string;
+  public
+    property LowerCaseText : string read GetLowerCaseText;
+    property Text : string read GetText;
+    property OriginalText : string read FOriginalText;
   end;
   PToken = ^TToken;
 
@@ -56,6 +66,8 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+
+    // TODO: FileStream 이용하는 메소드 추가
 
     procedure SetText(AText:string);
     function GetNextToken:TToken;
@@ -106,18 +118,21 @@ type
   TStateSlashComment = class (TState)
   private
   public
+    procedure ActionIn(AOld:TState); override;
     procedure Scan; override;
   end;
 
   TStateBraceComment = class (TState)
   private
   public
+    procedure ActionIn(AOld:TState); override;
     procedure Scan; override;
   end;
 
   TStateSlashAsteriskComment = class (TState)
   private
   public
+    procedure ActionIn(AOld:TState); override;
     procedure Scan; override;
   end;
 
@@ -212,7 +227,8 @@ begin
   FToken.Line      := ALine;
   FToken.Col       := ACol;
   FToken.TokenType := ATokenType;
-  FToken.Text      := AText;
+
+  FToken.SetText( AText );
 end;
 
 function TScanner.GetNextToken:TToken;
@@ -326,7 +342,7 @@ begin
     '/': FScanner.SetState(FScanner.FStateSlash);
     '0'..'9': FScanner.SetState(FScanner.FStateNumber);
     '_', 'a'..'z', 'A'..'Z': FScanner.SetState(FScanner.FStateIdentifier);
-    else // White Space
+    else FScanner.set_Token(FScanner.FLine, FScanner.FCol, ttWhiteSpace, Ch);
   end;
 end;
 
@@ -366,7 +382,11 @@ begin
     '/': FScanner.SetState(FScanner.FStateSlash);
     '0'..'9': FScanner.SetState(FScanner.FStateNumber);
     'a'..'z', 'A'..'Z': FScanner.SetState(FScanner.FStateIdentifier);
-    else FScanner.SetState(FScanner.FStateNormal);  // White Space
+
+    else begin
+      FScanner.SetState(FScanner.FStateNormal);
+      FScanner.set_Token(FScanner.FLine, FScanner.FCol, ttWhiteSpace, Ch);
+    end;
   end;
 end;
 
@@ -391,6 +411,12 @@ end;
 
 { TStateSlashComment }
 
+procedure TStateSlashComment.ActionIn(AOld: TState);
+begin
+  inherited;
+  FBuffer := '';
+end;
+
 procedure TStateSlashComment.Scan;
 var
   Ch : Char;
@@ -398,12 +424,22 @@ begin
   Ch := FScanner.NextChar;
 
   case Ch of
-    #13, #10: FScanner.SetState(FScanner.FStateNormal);
-    else ;  // Ignore
+    #10: begin
+      FScanner.SetState(FScanner.FStateNormal);
+      FScanner.set_Token(FScanner.FLine, FScanner.FCol, ttComment, '//' + FBuffer + #13#10);
+    end;
+
+    else FBuffer := FBuffer + Ch;
   end;
 end;
 
 { TStateBraceComment }
+
+procedure TStateBraceComment.ActionIn(AOld: TState);
+begin
+  inherited;
+  FBuffer := '';
+end;
 
 procedure TStateBraceComment.Scan;
 var
@@ -415,13 +451,20 @@ begin
     '}': begin
       // TODO: {$}- 컴파일러 지시자 처리
       FScanner.SetState(FScanner.FStateNormal);
+      FScanner.set_Token(FScanner.FLine, FScanner.FCol, ttComment, '{' + FBuffer + '}');
     end;
 
-    else ;  // Ignore
+    else FBuffer := FBuffer + Ch;
   end;
 end;
 
 { TStateSlashAsteriskComment }
+
+procedure TStateSlashAsteriskComment.ActionIn(AOld: TState);
+begin
+  inherited;
+  FBuffer := '';
+end;
 
 procedure TStateSlashAsteriskComment.Scan;
 var
@@ -431,7 +474,7 @@ begin
 
   case Ch of
     '*': FScanner.SetState(FScanner.FSTateAsteriskInComment);
-    else ;  // Ignore
+    else FBuffer := FBuffer + Ch;
   end;
 end;
 
@@ -444,8 +487,15 @@ begin
   Ch := FScanner.NextChar;
 
   case Ch of
-    '/': FScanner.SetState(FScanner.FStateNormal);
-    else FScanner.SetState(FScanner.FStateSlashAsteriskComment);
+    '/': begin
+      FScanner.SetState(FScanner.FStateNormal);
+      FScanner.set_Token(FScanner.FLine, FScanner.FCol, ttComment, '/*' + FBuffer + '*/');
+    end;
+
+    else begin
+      FBuffer := FBuffer + Ch;
+      FScanner.SetState(FScanner.FStateSlashAsteriskComment);
+    end;
   end;
 end;
 
@@ -565,9 +615,23 @@ end;
 
 { TToken }
 
-function TToken.LowerCaseText: string;
+function TToken.GetLowerCaseText: string;
 begin
-  Result := LowerCase(Text);
+  Result := LowerCase( FOriginalText );
+end;
+
+function TToken.GetText: string;
+begin
+  case TokenType of
+    ttNone: Result := '';
+    ttString: Result := '''' + FOriginalText + '''';
+    else Result := FOriginalText;
+  end;
+end;
+
+procedure TToken.SetText(const AText: string);
+begin
+  FOriginalText := AText;
 end;
 
 end.
