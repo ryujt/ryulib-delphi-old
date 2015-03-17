@@ -15,20 +15,24 @@ type
 
   TToken = record
   strict private
-    FOriginalText : string;
+    FText : string;
   private
     FLowerCaseText: string;
     procedure SetText(const AText:string);
-    function GetText: string;
+    function GetOriginalText: string;
     function GetLowerCaseText: string;
   public
     Line :integer;
     Col : integer;
     TokenType : TTokenType;
   public
+    /// 토큰이 의미하는 문자열
+    property Text : string read FText;
+
+    /// 원본에 있었던 문자열
+    property OriginalText : string read GetOriginalText;
+
     property LowerCaseText : string read GetLowerCaseText;
-    property Text : string read GetText;
-    property OriginalText : string read FOriginalText;
   end;
   PToken = ^TToken;
 
@@ -429,6 +433,8 @@ begin
       FScanner.set_Token(FScanner.FLine, FScanner.FCol, ttComment, '//' + FBuffer + #13#10);
     end;
 
+    #13: ;
+
     else FBuffer := FBuffer + Ch;
   end;
 end;
@@ -617,21 +623,21 @@ end;
 
 function TToken.GetLowerCaseText: string;
 begin
-  Result := LowerCase( FOriginalText );
+  Result := LowerCase( FText );
 end;
 
-function TToken.GetText: string;
+function TToken.GetOriginalText: string;
 begin
   case TokenType of
     ttNone: Result := '';
-    ttString: Result := '''' + FOriginalText + '''';
-    else Result := FOriginalText;
+    ttString: Result := '''' + FText + '''';
+    else Result := FText;
   end;
 end;
 
 procedure TToken.SetText(const AText: string);
 begin
-  FOriginalText := AText;
+  FText := AText;
 end;
 
 end.

@@ -41,7 +41,7 @@ begin
 
   Token := FScanner.GetNextToken;
   while not FScanner.IsEOF do begin
-    sSrc := sSrc + Token.Text;
+    sSrc := sSrc + Token.OriginalText;
 
     Token := FScanner.GetNextToken;
   end;
