@@ -16,11 +16,10 @@ type
   TToken = record
   strict private
     FText : string;
+    FLowerCaseText : string;
   private
-    FLowerCaseText: string;
-    procedure SetText(const AText:string);
+    procedure SetText(AText:string);
     function GetOriginalText: string;
-    function GetLowerCaseText: string;
   public
     Line :integer;
     Col : integer;
@@ -32,7 +31,7 @@ type
     /// 원본에 있었던 문자열
     property OriginalText : string read GetOriginalText;
 
-    property LowerCaseText : string read GetLowerCaseText;
+    property LowerCaseText : string read FLowerCaseText;
   end;
   PToken = ^TToken;
 
@@ -294,6 +293,10 @@ end;
 
 procedure TScanner.SetText(AText: string);
 begin
+  // 새 줄 문자를 #13으로 통일
+  AText := StringReplace( AText, #13#10, #13, [rfReplaceAll] );
+  AText := StringReplace( AText, #10, #13, [rfReplaceAll] );
+
   FIndex := 0;
   FText := AText;
 
@@ -428,12 +431,12 @@ begin
   Ch := FScanner.NextChar;
 
   case Ch of
-    #10: begin
+    #13: begin
       FScanner.SetState(FScanner.FStateNormal);
-      FScanner.set_Token(FScanner.FLine, FScanner.FCol, ttComment, '//' + FBuffer + #13#10);
+      FScanner.set_Token(FScanner.FLine, FScanner.FCol, ttComment, '//' + FBuffer + #13);
     end;
 
-    #13: ;
+    #10: ;
 
     else FBuffer := FBuffer + Ch;
   end;
@@ -511,7 +514,7 @@ procedure TStateStringBegin.ActionIn(AOld:TState);
 begin
   if AOld = FScanner.FStateStringEscape then begin
     case FScanner.CurrentChar of
-      'n': FBuffer := FBuffer + #13#10;
+      'n': FBuffer := FBuffer + #13;
       else FBuffer := FBuffer + FScanner.CurrentChar;
     end;
   end else begin
@@ -621,11 +624,6 @@ end;
 
 { TToken }
 
-function TToken.GetLowerCaseText: string;
-begin
-  Result := LowerCase( FText );
-end;
-
 function TToken.GetOriginalText: string;
 begin
   case TokenType of
@@ -635,9 +633,12 @@ begin
   end;
 end;
 
-procedure TToken.SetText(const AText: string);
+procedure TToken.SetText(AText: string);
 begin
+  AText := StringReplace( AText, #13, #13#10, [rfReplaceAll] );
+
   FText := AText;
+  FLowerCaseText := LowerCase( AText );
 end;
 
 end.
