@@ -162,7 +162,7 @@ begin
     AState := stBlockBegin;
   end else if TScanMgr.Obj.isEndToken then begin
     // 디버그 코드 삽입
-    if AMethodDelpth = 0 then begin
+    if (AMethodDelpth = 0) and (Pos('.', AMethodName) > 0) then begin
       TScanMgr.Obj.Source := TScanMgr.Obj.Source + Format(#13#10+'  CodeSite.Send(''%s - End'');'+#13#10, [AMethodName]);
     end;
 
@@ -182,7 +182,7 @@ begin
     TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
 
     // 디버그 코드 삽입
-    if AMethodDelpth = 0 then begin
+    if (AMethodDelpth = 0) and (Pos('.', AMethodName) > 0) then begin
       TScanMgr.Obj.Source := TScanMgr.Obj.Source + Format(#13#10+'  CodeSite.Send(''%s - Begin'', Self);'+#13#10, [AMethodName]);
     end;
   end else begin
