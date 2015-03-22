@@ -9,7 +9,7 @@ uses
 type
   TState = (
     stNone, stMethodBegin, stIdentifier, stDot, stIdentifier2, stParenthesisLeft,
-    stParenthesisRight, stColon, stResultType, stMethodDeclare, stMethodBody,
+    stParenthesisRight, stColon, stMethodDeclare, stMethodBody,
     stBlockBegin, stMethodEnd
   );
 
@@ -26,7 +26,6 @@ type
     procedure do_ParenthesisLeft(var AState:TState; var AMethodName:string);
     procedure do_ParenthesisRight(var AState:TState; var AMethodName:string);
     procedure do_Colon(var AState:TState; var AMethodName:string);
-    procedure do_ResultType(var AState:TState; var AMethodName:string);
     procedure do_MethodDeclare(var AState:TState; var AMethodName:string; AMethodDelpth:integer);
     procedure do_MethodBody(var AState:TState; var AMethodName:string; AMethodDelpth:integer);
     procedure do_BlockBegin(var AState:TState; var AMethodName:string; ADelpth:integer);
@@ -93,10 +92,8 @@ end;
 
 procedure TScanMethod.do_Colon;
 begin
-  if TScanMgr.Obj.CurrentToken.TokenType <> ttIdentifier then
-    raise Exception.Create( get_ErrorMsg('Identifier expected. - ' + TScanMgr.Obj.CurrentToken.OriginalText) )
-  else begin
-    AState := stResultType;
+  if TScanMgr.Obj.CurrentToken.OriginalText = ';' then begin
+    AState := stMethodDeclare;
   end;
 
   TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
@@ -215,17 +212,6 @@ begin
   TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
 end;
 
-procedure TScanMethod.do_ResultType;
-begin
-  if TScanMgr.Obj.CurrentToken.OriginalText = ';' then begin
-    AState := stMethodDeclare;
-  end else begin
-    raise Exception.Create( get_ErrorMsg('Method declaration error.') )
-  end;
-
-  TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
-end;
-
 procedure TScanMethod.Execute(ADelpth:integer);
 var
   State : TState;
@@ -249,7 +235,6 @@ begin
       stParenthesisLeft: do_ParenthesisLeft(State, MethodName);
       stParenthesisRight: do_ParenthesisRight(State, MethodName);
       stColon: do_Colon(State, MethodName);
-      stResultType: do_ResultType(State, MethodName);
       stMethodDeclare: do_MethodDeclare(State, MethodName, ADelpth);
       stMethodBody: do_MethodBody(State, MethodName, ADelpth);
       stBlockBegin: do_BlockBegin(State, MethodName, 0);
