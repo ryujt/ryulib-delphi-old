@@ -15,6 +15,7 @@ type
 
   TScanMethod = class
   private
+    FisAfterEqualOrColon : boolean;
     procedure skip_WhiteSpace;
     function get_ErrorMsg(AMsg:string):string;
   private
@@ -103,12 +104,10 @@ end;
 
 procedure TScanMethod.do_Dot;
 begin
-  AMethodName := AMethodName + TScanMgr.Obj.CurrentToken.OriginalText;
-
   if TScanMgr.Obj.CurrentToken.TokenType <> ttIdentifier then
     raise Exception.Create( get_ErrorMsg('Identifier expected. - ' + TScanMgr.Obj.CurrentToken.OriginalText) )
   else begin
-    TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
+    AMethodName := AMethodName + TScanMgr.Obj.CurrentToken.OriginalText;
     AState := stIdentifier2;
   end;
 
@@ -118,7 +117,7 @@ end;
 procedure TScanMethod.do_Identifier;
 begin
   if TScanMgr.Obj.CurrentToken.OriginalText = '.' then begin
-    TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
+    AMethodName := AMethodName + TScanMgr.Obj.CurrentToken.OriginalText;
     AState := stDot;
   end else if TScanMgr.Obj.CurrentToken.OriginalText = '(' then begin
     AState := stParenthesisLeft;
@@ -129,6 +128,8 @@ begin
   end else begin
     raise Exception.Create( get_ErrorMsg('Method declaration error.') )
   end;
+
+  TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
 end;
 
 procedure TScanMethod.do_Identifier2;
@@ -176,7 +177,7 @@ end;
 
 procedure TScanMethod.do_MethodDeclare;
 begin
-  if TScanMgr.Obj.isMethodBegin then begin
+  if (not FisAfterEqualOrColon) and TScanMgr.Obj.isMethodBegin then begin
     TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
     Execute( AMethodDelpth + 1);
   end else if TScanMgr.Obj.isBeginToken then begin
@@ -232,6 +233,9 @@ var
 begin
   TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
 
+  // =, : 기호 다음이라면, isMethodBegin=true 라도 함수 선언이 아닌 타입 선언인 경우
+  FisAfterEqualOrColon := false;
+
   State := stMethodBegin;
   MethodName := '';
 
@@ -255,6 +259,10 @@ begin
         Break;
       end;
     end;
+
+    FisAfterEqualOrColon :=
+      (TScanMgr.Obj.CurrentToken.TokenType = ttSpecialChar) and
+      ((TScanMgr.Obj.CurrentToken.OriginalText = '=') or ((TScanMgr.Obj.CurrentToken.OriginalText = ':')));
 
     if State <> stMethodEnd then skip_WhiteSpace;
   end;

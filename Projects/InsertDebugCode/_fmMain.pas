@@ -47,6 +47,8 @@ begin
   FOldPath := sPath;
 
   FInsertDebugCode.Execute( sPath );
+
+  moResult.Lines.Add( 'Done!');
 end;
 
 procedure TfmMain.FormCreate(Sender: TObject);

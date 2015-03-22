@@ -43,12 +43,16 @@ end;
 
 procedure TInsertDebugCode.do_InsertDebugCode(AFileName: string);
 var
+  isAfterEqualOrColon : boolean;
   isFirstUsesExpected : boolean;
   isImplementationArea : boolean;
 begin
   if Assigned(FOnWork) then FOnWork(Self, AFileName);
 
   TScanMgr.Obj.SetText( AFileName, LoadFileAsText(AFileName) );
+
+  // =, : 기호 다음이라면, isMethodBegin=true 라도 함수 선언이 아닌 타입 선언인 경우
+  isAfterEqualOrColon := false;
 
   isFirstUsesExpected := true;
   isImplementationArea := false;
@@ -75,8 +79,14 @@ begin
       Continue;
     end;
 
-    if TScanMgr.Obj.isMethodBegin then TScanMethod.Obj.Execute(0)
+    if (not isAfterEqualOrColon) and TScanMgr.Obj.isMethodBegin then TScanMethod.Obj.Execute(0)
     else TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
+
+    if TScanMgr.Obj.CurrentToken.TokenType <> ttWhiteSpace then begin
+      isAfterEqualOrColon :=
+        (TScanMgr.Obj.CurrentToken.TokenType = ttSpecialChar) and
+        ((TScanMgr.Obj.CurrentToken.OriginalText = '=') or ((TScanMgr.Obj.CurrentToken.OriginalText = ':')));
+    end;
 
     TScanMgr.Obj.GetNextToken;
   end;
