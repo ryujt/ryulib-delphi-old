@@ -33,6 +33,20 @@ implementation
 uses
   SelectPathDlg;
 
+type
+  TMap = class(TObject)
+  private
+    FItems: TObjectList;
+    function getItem(Index: Integer): TMapItem;
+    property Items[Index: Integer]: TMapItem read getItem;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function Get(Key: Integer): Pointer;
+    function Put(Key: Integer; Value: Pointer): Pointer;
+    function Remove(Key: Integer): Pointer;
+  end;
+
 {$R *.dfm}
 
 procedure TfmMain.btExecuteClick(Sender: TObject);
