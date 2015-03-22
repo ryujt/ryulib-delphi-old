@@ -41,6 +41,7 @@ type
     FText : string;
     FIndex : integer;
   private
+    FTokenSaved : boolean;
     FLine :integer;
     FCol : integer;
     FToken : TToken;
@@ -72,8 +73,14 @@ type
 
     // TODO: FileStream 이용하는 메소드 추가
 
+    /// 스캔 할 문자열을 입력한다.
     procedure SetText(AText:string);
+
+    /// 다음 토큰을 구한다.
     function GetNextToken:TToken;
+
+    /// 현재의 토큰을 저장한다.  다음 GetNextToken에서 재사용 된다.
+    procedure SaveToken;
 
     function IsEOF:boolean;
   public
@@ -179,6 +186,7 @@ constructor TScanner.Create;
 begin
   inherited;
 
+  FTokenSaved := false;
   FPascalStyle := true;
   FUseStringEscape := false;
 
@@ -236,6 +244,13 @@ end;
 
 function TScanner.GetNextToken:TToken;
 begin
+  // 토큰을 저장하면 이전 토큰을 다시 리턴한다.
+  if FTokenSaved then begin
+    Result := FToken;
+    FTokenSaved := false;
+    Exit;
+  end;
+
   FToken.TokenType := ttNone;
 
   while not IsEOF do begin
@@ -268,6 +283,11 @@ begin
 //    'TScanner.NextChar: FLine=%d, FCol=%d, Result=%s', [FLine, FCol, Result]
 //  )));
   {$ENDIF}
+end;
+
+procedure TScanner.SaveToken;
+begin
+  FTokenSaved := true;
 end;
 
 procedure TScanner.SetPascalStyle(const Value: boolean);
@@ -303,6 +323,7 @@ begin
   FLine := 1;
   FCol := 0;
 
+  FTokenSaved := false;
   FToken.TokenType := ttNone;
 
   FState := FStateNormal;
