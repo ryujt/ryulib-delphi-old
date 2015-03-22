@@ -80,7 +80,7 @@ type
     function GetNextToken:TToken;
 
     /// 현재의 토큰을 저장한다.  다음 GetNextToken에서 재사용 된다.
-    procedure SaveToken;
+    procedure SaveCurrentToken;
 
     function IsEOF:boolean;
   public
@@ -285,7 +285,7 @@ begin
   {$ENDIF}
 end;
 
-procedure TScanner.SaveToken;
+procedure TScanner.SaveCurrentToken;
 begin
   FTokenSaved := true;
 end;
