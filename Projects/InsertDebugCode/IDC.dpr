@@ -6,7 +6,8 @@ uses
   SelectPathDlg in 'SelectPathDlg.pas' {fmSelectPathDlg},
   InsertDebugCode in 'InsertDebugCode.pas',
   ScanMethod in 'ScanMethod.pas',
-  ScanMgr in 'ScanMgr.pas';
+  ScanMgr in 'ScanMgr.pas',
+  Config in 'Config.pas';
 
 {$R *.res}
 

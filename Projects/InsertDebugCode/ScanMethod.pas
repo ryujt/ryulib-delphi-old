@@ -3,7 +3,8 @@ unit ScanMethod;
 interface
 
 uses
-  DebugTools, Scanner,
+  Config,
+  Scanner,
   SysUtils, Classes;
 
 type
@@ -16,7 +17,6 @@ type
   TScanMethod = class
   private
     FisAfterEqualOrColon : boolean;
-    procedure skip_WhiteSpace;
     function get_ErrorMsg(AMsg:string):string;
   private
     procedure do_MethodBegin(var AState:TState; var AMethodName:string);
@@ -54,15 +54,6 @@ begin
   Result := MyObject;
 end;
 
-procedure TScanMethod.skip_WhiteSpace;
-begin
-  TScanMgr.Obj.GetNextToken;
-  while TScanMgr.Obj.CurrentToken.TokenType = ttWhiteSpace do begin
-    TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
-    TScanMgr.Obj.GetNextToken;
-  end;
-end;
-
 constructor TScanMethod.Create;
 begin
   inherited;
@@ -83,7 +74,7 @@ begin
   end else if TScanMgr.Obj.isBeginToken then begin
     TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
 
-    skip_WhiteSpace;
+    TScanMgr.Obj.GetNextTokenAndSkipWhiteSpace;
     do_BlockBegin(AState, AMethodName, ADelpth + 1);
   end else begin
     TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
@@ -162,9 +153,9 @@ begin
     AState := stBlockBegin;
   end else if TScanMgr.Obj.isEndToken then begin
     // 디버그 코드 삽입
-    if (AMethodDelpth = 0) and (Pos('.', AMethodName) > 0) then begin
-      TScanMgr.Obj.Source := TScanMgr.Obj.Source + Format(#13#10+'  CodeSite.Send(''%s - End'');'+#13#10, [AMethodName]);
-    end;
+//    if (AMethodDelpth = 0) and (Pos('.', AMethodName) > 0) then begin
+//      TScanMgr.Obj.Source := TScanMgr.Obj.Source + DebugCodeMethodEnd(AMethodName);
+//    end;
 
     AState := stMethodEnd;
   end;
@@ -183,7 +174,7 @@ begin
 
     // 디버그 코드 삽입
     if (AMethodDelpth = 0) and (Pos('.', AMethodName) > 0) then begin
-      TScanMgr.Obj.Source := TScanMgr.Obj.Source + Format(#13#10+'  CodeSite.Send(''%s - Begin'', Self);'+#13#10, [AMethodName]);
+      TScanMgr.Obj.Source := TScanMgr.Obj.Source + DebugCodeMethodBegin(AMethodName);
     end;
   end else begin
     TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
@@ -217,15 +208,13 @@ var
   State : TState;
   MethodName : string;
 begin
-  TScanMgr.Obj.Source := TScanMgr.Obj.Source + TScanMgr.Obj.CurrentToken.OriginalText;
-
   // =, : 기호 다음이라면, isMethodBegin=true 라도 함수 선언이 아닌 타입 선언인 경우
   FisAfterEqualOrColon := false;
 
   State := stMethodBegin;
   MethodName := '';
 
-  skip_WhiteSpace;
+  TScanMgr.Obj.GetNextTokenAndSkipWhiteSpace;
   while State <> stMethodEnd do begin
     case State of
       stMethodBegin: do_MethodBegin(State, MethodName);
@@ -249,7 +238,7 @@ begin
       (TScanMgr.Obj.CurrentToken.TokenType = ttSpecialChar) and
       ((TScanMgr.Obj.CurrentToken.OriginalText = '=') or ((TScanMgr.Obj.CurrentToken.OriginalText = ':')));
 
-    if State <> stMethodEnd then skip_WhiteSpace;
+    if State <> stMethodEnd then TScanMgr.Obj.GetNextTokenAndSkipWhiteSpace;
   end;
 end;
 

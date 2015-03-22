@@ -22,9 +22,17 @@ type
 
     procedure SetText(AFileName,AText:string);
     procedure GetNextToken;
+
     procedure SaveCurrentToken;
 
+    procedure GetNextTokenAndSkipWhiteSpace;
+
     function isUses:boolean;
+    function isType:boolean;
+    function isVar:boolean;
+    function isClass:boolean;
+    function isRecord:boolean;
+    function isObject:boolean;
     function isImplementation:boolean;
     function isMethodBegin:boolean;
     function isBeginToken:boolean;
@@ -87,9 +95,25 @@ begin
   FCurrentToken := FScanner.GetNextToken;
 end;
 
+procedure TScanMgr.GetNextTokenAndSkipWhiteSpace;
+begin
+  GetNextToken;
+  while FCurrentToken.TokenType = ttWhiteSpace do begin
+    if FCurrentToken.Text <> #0 then FSource := FSource + FCurrentToken.OriginalText;
+    GetNextToken;
+  end;
+end;
+
 function TScanMgr.isBeginToken: boolean;
 begin
   Result := (FCurrentToken.TokenType = ttIdentifier) and (FCurrentToken.LowerCaseText = 'begin');
+end;
+
+function TScanMgr.isClass: boolean;
+begin
+  Result :=
+    (FCurrentToken.TokenType = ttIdentifier) and
+    (FCurrentToken.LowerCaseText = 'class');
 end;
 
 function TScanMgr.isEndToken: boolean;
@@ -111,11 +135,39 @@ begin
     ((FCurrentToken.LowerCaseText = 'procedure') or (FCurrentToken.LowerCaseText = 'function'));
 end;
 
+function TScanMgr.isObject: boolean;
+begin
+  Result :=
+    (FCurrentToken.TokenType = ttIdentifier) and
+    (FCurrentToken.LowerCaseText = 'object');
+end;
+
+function TScanMgr.isRecord: boolean;
+begin
+  Result :=
+    (FCurrentToken.TokenType = ttIdentifier) and
+    (FCurrentToken.LowerCaseText = 'record');
+end;
+
+function TScanMgr.isType: boolean;
+begin
+  Result :=
+    (FCurrentToken.TokenType = ttIdentifier) and
+    (FCurrentToken.LowerCaseText = 'type');
+end;
+
 function TScanMgr.isUses: boolean;
 begin
   Result :=
     (FCurrentToken.TokenType = ttIdentifier) and
     (FCurrentToken.LowerCaseText = 'uses');
+end;
+
+function TScanMgr.isVar: boolean;
+begin
+  Result :=
+    (FCurrentToken.TokenType = ttIdentifier) and
+    (FCurrentToken.LowerCaseText = 'var');
 end;
 
 initialization
