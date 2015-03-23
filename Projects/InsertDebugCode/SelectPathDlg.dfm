@@ -32,7 +32,7 @@ object fmSelectPathDlg: TfmSelectPathDlg
       Height = 45
       Align = alTop
       BevelOuter = bvLowered
-      Caption = #45433#54868' '#54028#51068#46308#51060' '#51200#51109' '#46112' '#54260#45908#47484' '#49440#53469#54616#49884#44592' '#48148#46989#45768#45796'.'
+      Caption = #54260#45908#47484' '#49440#53469#54616#49884#44592' '#48148#46989#45768#45796'.'
       TabOrder = 0
     end
     object edPath: TEdit
