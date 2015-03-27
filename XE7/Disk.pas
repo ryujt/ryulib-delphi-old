@@ -295,19 +295,23 @@ begin
   SetLastChar(Result, '\');
 end;
 
-Function  GetDiskSerialNumber(Drive:Char):String;
-Var
+function  GetDiskSerialNumber(Drive:Char):string;
+var
    FileSystemFlags : DWORD;
    VolumeSerialNumber : DWORD;
    MaximumComponentLength : DWORD;
-Begin
+begin
+  try
   GetVolumeInformation(PChar(Drive+':\'), Nil, 0,
                        @VolumeSerialNumber,
                        MaximumComponentLength,
                        FileSystemFlags, Nil, 0);
   Result:= IntToHex(HiWord(VolumeSerialNumber), 4)+
            IntToHex(LoWord(VolumeSerialNumber), 4);
-End;
+  except
+    Result := '';
+  end;
+end;
 
 function GetFileLastAccess(FileName:string):TDateTime;
 var
