@@ -3,7 +3,7 @@ unit RyuLib.WhiteBoard;
 interface
 
 uses
-  RyuGraphics,
+  RyuGraphics, MouseEventControl,
   Windows, Messages, SysUtils, Classes, Graphics, Controls;
 
 type
@@ -16,6 +16,14 @@ type
     FBitmap: TBitmap;
     FBitmapTemp : TBitmap;
     FBitmapDisplay: TBitmap;
+  private
+    FMouseDown : TPoint;
+    FMouseUp : TPoint;
+    FIsDrawing : boolean;
+    FMouseEventControl : TMouseEventControl;
+    procedure on_MouseDown(Sender:TObject; Button:TMouseButton; Shift:TShiftState; X,Y:Integer);
+    procedure on_MouseMove(Sender:TObject; Shift:TShiftState; X,Y:Integer);
+    procedure on_MouseUp(Sender:TObject; Button:TMouseButton; Shift:TShiftState; X,Y:Integer);
   private
     do_BeginDrawing : TDrawingFunction;
     do_Drawing : TDrawingFunction;
@@ -42,13 +50,6 @@ type
     procedure do_Ellipse_BeginDrawing(AX,AY:Integer);
     procedure do_Ellipse_Drawing(AX,AY:Integer);
     procedure do_Ellipse_EndDrawing(AX,AY:Integer);
-  private
-    FMouseDown : TPoint;
-    FMouseUp : TPoint;
-    FIsDrawing : boolean;
-    procedure on_MouseDown(Sender:TObject; Button:TMouseButton; Shift:TShiftState; X,Y:Integer);
-    procedure on_MouseMove(Sender:TObject; Shift:TShiftState; X,Y:Integer);
-    procedure on_MouseUp(Sender:TObject; Button:TMouseButton; Shift:TShiftState; X,Y:Integer);
   protected
     procedure Paint; override;
   private
@@ -121,13 +122,16 @@ begin
   FBitmapTemp.TransparentColor := clWhite;
   FBitmapTemp.Transparent := true;
 
-  OnMouseDown := on_MouseDown;
-  OnMouseMove := on_MouseMove;
-  OnMouseUp   := on_MouseUp;
+  FMouseEventControl := TMouseEventControl.Create(Self);
+  FMouseEventControl.TargetControl := Self;
+  FMouseEventControl.OnMouseDown := on_MouseDown;
+  FMouseEventControl.OnMouseMove := on_MouseMove;
+  FMouseEventControl.OnMouseUp   := on_MouseUp;
 end;
 
 destructor TWhiteBoard.Destroy;
 begin
+  FreeAndNil(FMouseEventControl);
   FreeAndNil(FBitmapDisplay);
   FreeAndNil(FBitmapTemp);
   FreeAndNil(FBitmap);
