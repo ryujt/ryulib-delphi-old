@@ -13,9 +13,16 @@ type
 
   TWhiteBoard = class (TCustomControl)
   private
+    /// 백그라운드(원본) 이미지
     FBitmap: TBitmap;
+
+    /// 드로잉 과정
     FBitmapTemp : TBitmap;
+
+    /// 화면에 표시
     FBitmapDisplay: TBitmap;
+
+    FPolyLines : array of TPoint;
   private
     FMouseDown : TPoint;
     FMouseUp : TPoint;
@@ -201,16 +208,25 @@ procedure TWhiteBoard.do_FreeDraw_BeginDrawing(AX, AY: Integer);
 begin
   do_Clear_BitmapTemp;
 
-  FBitmapDisplay.Canvas.MoveTo( AX, AY );
+  SetLength( FPolyLines, 1 );
+  FPolyLines[0] := Point( AX, AY );
+
+  FBitmapTemp.Canvas.MoveTo( AX, AY );
 end;
 
 procedure TWhiteBoard.do_FreeDraw_Drawing(AX, AY: Integer);
 begin
-  FBitmapDisplay.Canvas.LineTo( AX, AY );
+  SetLength( FPolyLines, Length(FPolyLines)+1 );
+  FPolyLines[Length(FPolyLines)-1] := Point( AX, AY );
+
+  FBitmapTemp.Canvas.LineTo( AX, AY );
 end;
 
 procedure TWhiteBoard.do_FreeDraw_EndDrawing(AX, AY: Integer);
 begin
+  do_Clear_BitmapTemp;
+
+  FBitmapTemp.Canvas.Polyline( FPolyLines );
 end;
 
 procedure TWhiteBoard.do_Line_BeginDrawing(AX, AY: Integer);
