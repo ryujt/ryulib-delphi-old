@@ -70,10 +70,8 @@ begin
   FCS := TCriticalSection.Create;
 
   FScheduler := TScheduler.Create;
-  FScheduler.Interval := 25;
+  FScheduler.Interval := 5;
   FScheduler.OnTimer := on_FScheduler_Timer;
-
-  FScheduler.Start;
 end;
 
 destructor TMouseEventControl.Destroy;
@@ -112,7 +110,13 @@ begin
 
   FCS.Acquire;
   try
-    ClientPos := FTargetControl.ScreenToClient( CurPos );
+    if not FTargetControl.Showing then Exit;
+
+    try
+      ClientPos := FTargetControl.ScreenToClient( CurPos );
+    except
+      Exit;
+    end;
 
     if (ClientPos.X < 0) or (ClientPos.Y < 0) then Exit;
     if (ClientPos.X >= FTargetControl.Width) or (ClientPos.Y >= FTargetControl.Height) then Exit;
@@ -131,6 +135,13 @@ end;
 procedure TMouseEventControl.on_TargetControl_MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
+  FCS.Acquire;
+  try
+    FOldShift := Shift;
+  finally
+    FCS.Release;
+  end;
+
   if Assigned(FOnMouseDown) then FOnMouseDown( Self, Button, Shift, X, Y );
 end;
 
@@ -148,7 +159,14 @@ end;
 procedure TMouseEventControl.on_TargetControl_MouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if Assigned(FOnMouseDown) then FOnMouseDown( Self, Button, Shift, X, Y );
+  FCS.Acquire;
+  try
+    FOldShift := Shift;
+  finally
+    FCS.Release;
+  end;
+
+  if Assigned(FOnMouseUp) then FOnMouseUp( Self, Button, Shift, X, Y );
 end;
 
 procedure TMouseEventControl.SetTargetControl(const Value: TWinControl);
@@ -157,9 +175,13 @@ begin
   try
     FTargetControl := Value;
 
+    if FTargetControl = nil then Exit;
+
     TWinControlWrapper(FTargetControl).OnMouseDown := on_TargetControl_MouseDown;
     TWinControlWrapper(FTargetControl).OnMouseMove := on_TargetControl_MouseMove;
     TWinControlWrapper(FTargetControl).OnMouseUp   := on_TargetControl_MouseUp;
+
+    FScheduler.Start;
   finally
     FCS.Release;
   end;
