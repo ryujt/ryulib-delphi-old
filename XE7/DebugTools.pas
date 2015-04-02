@@ -26,13 +26,14 @@ type
   end;
 
 var
-  DebugTool : TDebugTool;
+  DebugTool : TDebugTool = nil;
 
   FCS : TCriticalSection;
   DebugMsg : string = '';
 
 procedure Trace(const AMsg:string);
 begin
+  if DebugTool = nil then DebugTool := TDebugTool.Create;
   DebugTool.FTaskQueue.Add( TMemory.Create(AMsg) );
 end;
 
@@ -81,6 +82,5 @@ begin
 end;
 
 initialization
-  DebugTool := TDebugTool.Create;
   FCS := TCriticalSection.Create;
 end.
