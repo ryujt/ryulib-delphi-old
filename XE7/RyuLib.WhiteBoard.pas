@@ -223,10 +223,19 @@ begin
 end;
 
 procedure TWhiteBoard.do_FreeDraw_EndDrawing(AX, AY: Integer);
+var
+  isBezierDone : boolean;
 begin
   do_Clear_BitmapTemp;
 
-  FBitmapTemp.Canvas.Polyline( FPolyLines );
+  FBitmapTemp.Canvas.Lock;
+  try
+    isBezierDone := PolyBezier(FBitmapTemp.Canvas.Handle, FPolyLines[0], High(FPolyLines) + 1);
+  finally
+    FBitmapTemp.Canvas.Unlock;
+  end;
+
+  if not isBezierDone then FBitmapTemp.Canvas.Polyline( FPolyLines );
 end;
 
 procedure TWhiteBoard.do_Line_BeginDrawing(AX, AY: Integer);
