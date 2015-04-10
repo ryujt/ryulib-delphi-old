@@ -225,19 +225,33 @@ end;
 
 procedure TScheduler.do_Timer;
 begin
+  // Fire OnTimer evnet immediately when FInterval = 0
+  if FInterval = 0 then begin
+    if Assigned(FOnTimer) then FOnTimer(Self);
+    Exit;
+  end;
+
   Tick := GetTick;
 
   if FIsStarted = false then begin
     OldTick := Tick;
     TickCount := 0;
+
+    // Take a break when this has nothing todo.
+    Sleep(1);
+
     Exit;
   end;
 
+  // OldTick can greater than Tick on every 45 days after OS boot up.
   if Tick > OldTick then begin
     TickCount := TickCount + (Tick-OldTick);
     if TickCount >= FInterval then begin
       TickCount := 0;
       if Assigned(FOnTimer) then FOnTimer(Self);
+    end else begin
+      // Take a break when this has nothing todo.
+      Sleep(1);
     end;
   end;
 
@@ -280,8 +294,6 @@ begin
         if Assigned(FOnError) then FOnError(Self, 'TScheduler.on_Repeat - ' + E.Message)
         else raise Exception.Create('TScheduler.on_Repeat - ' + E.Message);
     end;
-
-    SimpleThread.Sleep(1);
   end;
 
   Clear;
