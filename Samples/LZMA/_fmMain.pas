@@ -60,9 +60,9 @@ begin
 
   Tick := GetTickCount;
 
-//  iResult := CompressSlow(FBufferSrc, iSizeIn, FBufferZip, SFizeOutLZMA);
+  iResult := CompressSlow(FBufferSrc, iSizeIn, FBufferZip, FSizeOutLZMA);
 //  iResult := CompressDefault(FBufferSrc, iSizeIn, FBufferZip, FSizeOutLZMA);
-  iResult := CompressFast(FBufferSrc, iSizeIn, FBufferZip, FSizeOutLZMA);
+//  iResult := CompressFast(FBufferSrc, iSizeIn, FBufferZip, FSizeOutLZMA);
 
   moMsg.Lines.Add(Format('Compress: %dms, Result=%d, iSizeOut=%s', [GetTickCount-Tick, iResult, BytesStr(FSizeOutLZMA)]));
 end;
@@ -74,7 +74,7 @@ var
 begin
   Tick := GetTickCount;
 
-  iResult := Uncompress(FBufferZip, @FSizeOutLZMA, FBufferUnZip, iSizeOut);
+  iResult := Uncompress(FBufferZip, FSizeOutLZMA, FBufferUnZip, iSizeOut);
 
   if not CompareFastBytes(FBufferSrc, FBufferUnZip, DATA_SOURCE_SIZE) then
     MessageDlg('원본과 다름', mtError, [mbOk], 0)
