@@ -10,14 +10,18 @@ const
   DEFAULT_INTERVAL = 10;
 
 type
+  // TODO: TPacketProcessor, TaskQueue, TWorker, TScheduler 차이점 설명 또는 통합
+  // TODO: TaskQueue, TWorker, TScheduler 차이점 설명
+
   {*
-    스레드를 이용해서 데이터를 처리하고자 할 때 사용한다.
-    Start, Stop이 처리 될 데이터와 같은 큐에서 처리된다.
-    따라서, Start, Stop과 데이터 처리가 하나의 스레드에서 실행되어야 할 경우 유용하다.
+    처리해야 할 작업을 큐에 넣고 차례로 실행한다.
+    작업의 실행은 내부의 스레드를 이용해서 비동기로 실행한다.
+    작업 요청이 다양한 스레드에서 진행되는데, 순차적인 동작이 필요 할 때 사용한다.
+    요청 된 작업이 요청한 스레드와 별개의 스레드에서 실행되어야 할 때 사용한다.  (비동기 실행)
+    TaskQueue 와 다른 점은 TTimer와 같이 주기적인 시간에도 이벤트가 발생한다는 것이다.
   }
   TScheduler = class
   private
-    FIsTerminated : integer;
     FCS : TCriticalSection;
     FTasks : TDynamicQueue;
     procedure do_Tasks;
@@ -36,7 +40,6 @@ type
     FIsStarted: boolean;
     FOnStop: TNotifyEvent;
     FOnStart: TNotifyEvent;
-    FOnError: TStringEvent;
     procedure SetInterval(const Value: integer);
   public
     constructor Create;
@@ -59,7 +62,6 @@ type
     property OnTimer : TNotifyEvent read FOnTimer write FOnTimer;
     property OnTask : TDataAndTagEvent read FOnTask write FOnTask;
     property OnTerminate : TNotifyEvent read FOnTerminate write FOnTerminate;
-    property OnError : TStringEvent read FOnError write FOnError;
   end;
 
 implementation
@@ -168,7 +170,6 @@ constructor TScheduler.Create;
 begin
   inherited;
 
-  FIsTerminated := 0;
   FIsStarted := false;
   FInterval := DEFAULT_INTERVAL;
 
@@ -182,14 +183,7 @@ destructor TScheduler.Destroy;
 begin
   Clear;
 
-  FSimpleThread.TerminateNow;
-
-  if InterlockedExchange( FIsTerminated, 1 ) = 0 then begin
-    if Assigned(FOnTerminate) then FOnTerminate(Self);
-  end;
-
-//  FreeAndNil(FCS);
-//  FreeAndNil(FTasks);
+  FSimpleThread.Terminate;
 
   inherited;
 end;
@@ -225,33 +219,19 @@ end;
 
 procedure TScheduler.do_Timer;
 begin
-  // Fire OnTimer evnet immediately when FInterval = 0
-  if FInterval = 0 then begin
-    if Assigned(FOnTimer) then FOnTimer(Self);
-    Exit;
-  end;
-
   Tick := GetTick;
 
   if FIsStarted = false then begin
     OldTick := Tick;
     TickCount := 0;
-
-    // Take a break when this has nothing todo.
-    Sleep(1);
-
     Exit;
   end;
 
-  // OldTick can greater than Tick on every 45 days after OS boot up.
   if Tick > OldTick then begin
     TickCount := TickCount + (Tick-OldTick);
     if TickCount >= FInterval then begin
       TickCount := 0;
       if Assigned(FOnTimer) then FOnTimer(Self);
-    end else begin
-      // Take a break when this has nothing todo.
-      Sleep(1);
     end;
   end;
 
@@ -279,28 +259,18 @@ begin
   OldTick := GetTick;
 
   while not SimpleThread.Terminated do begin
-    try
-      do_Tasks;
-    except
-      on E : Exception do
-        if Assigned(FOnError) then FOnError(Self, 'TScheduler.on_Repeat - ' + E.Message)
-        else raise Exception.Create('TScheduler.on_Repeat - ' + E.Message);
-    end;
+    do_Tasks;
+    do_Timer;
 
-    try
-      do_Timer;
-    except
-      on E : Exception do
-        if Assigned(FOnError) then FOnError(Self, 'TScheduler.on_Repeat - ' + E.Message)
-        else raise Exception.Create('TScheduler.on_Repeat - ' + E.Message);
-    end;
+    SimpleThread.Sleep(1);
   end;
 
   Clear;
 
-  if InterlockedExchange( FIsTerminated, 1 ) = 0 then begin
-    if Assigned(FOnTerminate) then FOnTerminate(Self);
-  end;
+  if Assigned(FOnTerminate) then FOnTerminate(Self);
+
+//  FreeAndNil(FCS);
+//  FreeAndNil(FTasks);
 end;
 
 procedure TScheduler.SetInterval(const Value: integer);
@@ -313,23 +283,23 @@ begin
   FCS.Acquire;
   try
     FTasks.Push( TTask.Create(ttStart) );
+    FSimpleThread.WakeUp;
   finally
     FCS.Release;
   end;
-
-  FSimpleThread.WakeUp;
 end;
 
 procedure TScheduler.Stop;
 begin
+  // TODO: 실행되면 바로 모든 스케쥴 처리가 종료되도록 (플래그 설정)
+
   FCS.Acquire;
   try
     FTasks.Push( TTask.Create(ttStop) );
+    FSimpleThread.WakeUp;
   finally
     FCS.Release;
   end;
-
-  FSimpleThread.WakeUp;
 end;
 
 end.

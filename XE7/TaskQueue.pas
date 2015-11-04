@@ -4,17 +4,19 @@ interface
 
 uses
   RyuLibBase, SimpleThread, DynamicQueue,
-  Windows, SysUtils, Classes, SyncObjs;
+  SysUtils, Classes, SyncObjs;
 
 type
+  // TODO: TPacketProcessor, TaskQueue, TWorker, TScheduler 차이점 설명 또는 통합
+
   {*
     처리해야 할 작업을 큐에 넣고 차례로 실행한다.
     작업의 실행은 내부의 스레드를 이용해서 비동기로 실행한다.
     작업 요청이 다양한 스레드에서 진행되는데, 순차적인 동작이 필요 할 때 사용한다.
+    요청 된 작업이 요청한 스레드와 별개의 스레드에서 실행되어야 할 때 사용한다.  (비동기 실행)
   }
   TTaskQueue = class
   private
-    FIsTerminated : integer;
     FCS : TCriticalSection;
     FTasks : TDynamicQueue;
     procedure do_Tasks;
@@ -25,11 +27,11 @@ type
   private
     FOnTask: TDataAndTagEvent;
     FOnTerminate: TNotifyEvent;
-    FOnError: TStringEvent;
-    function GetCount: integer;
   public
     constructor Create;
     destructor Destroy; override;
+
+    procedure Terminate;
 
     procedure Clear;
 
@@ -37,10 +39,8 @@ type
     procedure Add(AData:pointer; ASize:integer; ATag:pointer); overload;
     procedure Add(ATag:pointer); overload;
   public
-    property Count : integer read GetCount;
     property OnTask : TDataAndTagEvent read FOnTask write FOnTask;
     property OnTerminate : TNotifyEvent read FOnTerminate write FOnTerminate;
-    property OnError : TStringEvent read FOnError write FOnError;
   end;
 
 implementation
@@ -132,8 +132,6 @@ constructor TTaskQueue.Create;
 begin
   inherited;
 
-  FIsTerminated := 0;
-
   FCS := TCriticalSection.Create;
   FTasks := TDynamicQueue.Create(false);
 
@@ -144,14 +142,7 @@ destructor TTaskQueue.Destroy;
 begin
   Clear;
 
-  FSimpleThread.TerminateNow;
-
-  if InterlockedExchange( FIsTerminated, 1 ) = 0 then begin
-    if Assigned(FOnTerminate) then FOnTerminate(Self);
-  end;
-
-//  FreeAndNil(FCS);
-//  FreeAndNil(FTasks);
+  FSimpleThread.Terminate;
 
   inherited;
 end;
@@ -173,16 +164,6 @@ begin
   end;
 end;
 
-function TTaskQueue.GetCount: integer;
-begin
-  FCS.Acquire;
-  try
-    Result := FTasks.Count;
-  finally
-    FCS.Release;
-  end;
-end;
-
 function TTaskQueue.get_Task: TObject;
 begin
   Result := nil;
@@ -200,22 +181,22 @@ var
   SimpleThread : TSimpleThread absolute Sender;
 begin
   while not SimpleThread.Terminated do begin
-    try
-      do_Tasks;
-    except
-      on E : Exception do
-        if Assigned(FOnError) then FOnError(Self, 'TTaskQueue.on_Repeat - ' + E.Message)
-        else raise Exception.Create('TTaskQueue.on_Repeat - ' + E.Message);
-    end;
+    do_Tasks;
 
     SimpleThread.SleepTight;
   end;
 
   Clear;
 
-  if InterlockedExchange( FIsTerminated, 1 ) = 0 then begin
-    if Assigned(FOnTerminate) then FOnTerminate(Self);
-  end;
+  if Assigned(FOnTerminate) then FOnTerminate(Self);  
+
+//  FreeAndNil(FCS);
+//  FreeAndNil(FTasks);
+end;
+
+procedure TTaskQueue.Terminate;
+begin
+  FSimpleThread.Terminate;
 end;
 
 end.
