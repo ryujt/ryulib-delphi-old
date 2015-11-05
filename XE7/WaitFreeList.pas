@@ -17,7 +17,12 @@ type
 
     procedure WaitFreeObjectAdded;
     procedure WaitFreeObjectRemoved;
+
+    /// 중복 허용하지 않고 이전 오브젝트를 삭제하는 경우
     procedure WaitFreeObjectDuplicated;
+
+    /// 중복 허용하지 않고 새로 추가되는 오브젝트를 허용하지 않았을 경우
+    procedure WaitFreeObjectRejected;
 
     procedure SetLeftWaitFreeObject(AObject:TObject; AInterface:IWaitFreeObject);
     function GetLeftWaitFreeObject:TObject;
@@ -58,6 +63,7 @@ type
     procedure WaitFreeObjectAdded; virtual;
     procedure WaitFreeObjectRemoved; virtual;
     procedure WaitFreeObjectDuplicated; virtual;
+    procedure WaitFreeObjectRejected; virtual;
   public
     constructor Create; virtual;
   end;
@@ -72,13 +78,14 @@ type
   TWaitFreeObjectList = class
   private
     FAllowDuplicatedObject : boolean;
+    FDropOldDuplicatedObject : boolean;
     FActionThread : TSimpleThread;
     procedure do_Clear;
     procedure do_Add(AObject:IWaitFreeObject);
     procedure do_Remove(AObject:IWaitFreeObject);
     procedure do_Synchronize(AIterator:IWaitFreeSynchronize; AContext:pointer);
     procedure do_Duplicated(AObject:IWaitFreeObject);
-    procedure delete_DuplicatedObject(AObject:IWaitFreeObject);
+    function check_DuplicatedObject(AObject:IWaitFreeObject):boolean;
   private
     FHeaderInterface : IWaitFreeObject;
     FCount: integer;
@@ -110,6 +117,7 @@ type
     }
     procedure Synchronize(ASynchronize:IWaitFreeSynchronize; AContext:pointer);
 
+    property DropOldDuplicatedObject : boolean read FDropOldDuplicatedObject write FDropOldDuplicatedObject;
     property Name : string read FName write SetName;
     property IsBusy : boolean read GetIsBusy;
     property IsEmpty : boolean read GetIsEmpty;
@@ -301,6 +309,10 @@ procedure TWaitFreeObject.WaitFreeObjectDuplicated;
 begin
 end;
 
+procedure TWaitFreeObject.WaitFreeObjectRejected;
+begin
+end;
+
 procedure TWaitFreeObject.WaitFreeObjectRemoved;
 begin
 end;
@@ -322,6 +334,7 @@ begin
   inherited Create;
 
   FAllowDuplicatedObject := AAllowDuplicatedObject;
+  FDropOldDuplicatedObject := true;
 
   FCount := 0;
   FHeaderInterface := nil;
@@ -329,13 +342,19 @@ begin
   FActionThread := TActionThread.Create(Self);
 end;
 
-procedure TWaitFreeObjectList.delete_DuplicatedObject(AObject: IWaitFreeObject);
+function TWaitFreeObjectList.check_DuplicatedObject(AObject: IWaitFreeObject): boolean;
 var
   Node : IWaitFreeObject;
 begin
+  Result := false;
+
   Node := FHeaderInterface;
   while node <> nil do begin
-    if Node.CompareWaitFreeObject(AObject as TObject) then do_Duplicated(Node);
+    if Node.CompareWaitFreeObject(AObject as TObject) then begin
+      Result := true;
+      Break;
+    end;
+
     Node := Node.GetRightWaitFreeInterface;
   end;
 end;
@@ -353,11 +372,21 @@ end;
 procedure TWaitFreeObjectList.do_Add(AObject: IWaitFreeObject);
 begin
   if AObject = nil then Exit;
+
+  // 이미 리스트 안에 있는 객체이면
   if not AObject.IsWaitFreeObjectDeleted then Exit;
 
   AObject.SetWaitFreeObjectDeleted(false);
 
-  if not FAllowDuplicatedObject then delete_DuplicatedObject(AObject);
+  if not FAllowDuplicatedObject and check_DuplicatedObject(AObject) then begin
+    if FDropOldDuplicatedObject then begin
+      do_Duplicated(AObject);
+    end else begin
+      AObject.WaitFreeObjectRejected;
+      AObject.SetWaitFreeObjectDeleted(true);
+      Exit;
+    end;
+  end;
 
   AObject.SetLeftWaitFreeObject(nil, nil);
 
