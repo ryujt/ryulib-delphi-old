@@ -69,7 +69,11 @@ function RunCaptured(const APath, AExecutive, AParameter: string): string;
 function GetAssociation(const DocFileName: string): string;
 procedure SetAssociation(ExtName:String; AppName:String);
 
+/// 파일이 있는 지 검사
 function FindFile(AFileName:string):boolean;
+
+/// 파일이 있으면 첫 번 째 파일 전체 이름을 리턴
+function FindFileName(AFileName:string):string;
 
 Implementation
 
@@ -956,6 +960,34 @@ begin
 
     // AFileName 조건에 맞는 파일을 찾았음
     Result := true;
+    Break;
+
+    iResult:= FindNext(SearchRec);
+  end;
+end;
+
+function FindFileName(AFileName:string):string;
+var
+  iResult : integer;
+  SearchRec : TSearchRec;
+  isCondition : boolean;
+begin
+  Result := '';
+
+  iResult:= FindFirst(AFileName, faAnyFile, SearchRec);
+  while iResult = 0 do begin
+    isCondition :=
+      ((SearchRec.Attr and faDirectory) = faDirectory) or
+      (SearchRec.Name = '.') or
+      (SearchRec.Name = '..');
+
+    if isCondition then begin
+      iResult:= FindNext(SearchRec);
+      Continue;
+    end;
+
+    // AFileName 조건에 맞는 파일을 찾았음
+    Result := ExtractFilePath(AFileName) + SearchRec.Name;
     Break;
 
     iResult:= FindNext(SearchRec);

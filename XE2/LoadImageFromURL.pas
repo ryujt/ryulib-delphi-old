@@ -114,6 +114,8 @@ begin
       PostMessage(Handle, WM_Error, 0, 0);
     end;
   finally
+    IdHTTP.Disconnect;
+
     IdHTTP.Free;
     msData.Free;
   end;
@@ -213,6 +215,8 @@ begin
 
     Result := true;
   finally
+    IdHTTP.Disconnect;
+
     IdHTTP.Free;
     msData.Free;
   end;
