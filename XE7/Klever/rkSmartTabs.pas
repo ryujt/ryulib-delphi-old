@@ -2,7 +2,7 @@ unit rkSmartTabs;
 {$WARN SYMBOL_PLATFORM OFF}
 {$WARN UNIT_PLATFORM OFF}
 // SmartTabs by Roy Magne Klever
-// � 2011 by Roy Magne Klever. All rights reserved
+// ?2011 by Roy Magne Klever. All rights reserved
 //
 // This file is not distributable without permission by Roy Magne Klever
 // WEB: www.rmklever.com
@@ -500,6 +500,9 @@ var
   end;
 
 begin
+  // TODO: 속성으로 처리 (선택 가능하도록)
+  Exit;
+
   if FDefPopup <> nil then
     FreeAndNil(FDefPopup);
   FDefPopup := TPopupMenu.Create(nil);
