@@ -62,6 +62,7 @@ type
   private
     FDrawType : TDrawType;
     FEraserSize: integer;
+    FOnPaint: TNotifyEvent;
     procedure SetTDrawType(const Value: TDrawType);
     function GetPen: TPen;
     function GetFont: TFont;
@@ -93,6 +94,8 @@ type
     property EraserSize : integer read FEraserSize write FEraserSize;
 
     property Bitmap : TBitmap read FBitmap write SetBitmap;
+
+    property OnPaint : TNotifyEvent read FOnPaint write FOnPaint;
   end;
 
 implementation
@@ -387,6 +390,8 @@ begin
   Canvas.Draw( 0, 0, FBitmapDisplay );
 
   if FIsDrawing then Canvas.Draw( 0, 0, FBitmapTemp );
+
+  if Assigned(FOnPaint) then FOnPaint(Self);  
 end;
 
 procedure TWhiteBoard.Prepare;
