@@ -22,6 +22,9 @@ type
     /// 화면에 표시
     FBitmapDisplay: TBitmap;
 
+    // 현재 화면 전체에 대한 Bitmap (FBitmap + FBitmapTemp + FBitmapDisplay)
+    FInternalBitmap : TBitmap;
+
     FPolyLines : array of TPoint;
   private
     FMouseDown : TPoint;
@@ -94,6 +97,7 @@ type
     property EraserSize : integer read FEraserSize write FEraserSize;
 
     property Bitmap : TBitmap read FBitmap write SetBitmap;
+    property InternalBitmap : TBitmap read FInternalBitmap;
 
     property OnPaint : TNotifyEvent read FOnPaint write FOnPaint;
   end;
@@ -108,7 +112,7 @@ begin
 
   do_Clear_BitmapTemp;
 
-  FBitmapDisplay.Assign( FBitmap );
+  FBitmapDisplay.Assign(FBitmap);
 
   Invalidate;
 end;
@@ -126,11 +130,18 @@ begin
   SetTDrawType( dtFreeDraw );
 
   FBitmap := TBitmap.Create;
+  FBitmap.PixelFormat := pf32bit;
+
   FBitmapDisplay := TBitmap.Create;
+  FBitmapDisplay.PixelFormat := pf32bit;
 
   FBitmapTemp := TBitmap.Create;
+  FBitmapTemp.PixelFormat := pf32bit;
   FBitmapTemp.TransparentColor := clWhite;
   FBitmapTemp.Transparent := true;
+
+  FInternalBitmap := TBitmap.Create;
+  FInternalBitmap.PixelFormat := pf32bit;
 
   FMouseEventControl := TMouseEventControl.Create(Self);
   FMouseEventControl.TargetControl := Self;
@@ -204,7 +215,7 @@ end;
 
 procedure TWhiteBoard.do_Eraser_EndDrawing(AX, AY: Integer);
 begin
-//
+  //
 end;
 
 procedure TWhiteBoard.do_FreeDraw_BeginDrawing(AX, AY: Integer);
@@ -387,11 +398,15 @@ procedure TWhiteBoard.Paint;
 begin
   inherited;
 
-  Canvas.Draw( 0, 0, FBitmapDisplay );
+  FInternalBitmap.Width  := Width;
+  FInternalBitmap.Height := Height;
 
-  if FIsDrawing then Canvas.Draw( 0, 0, FBitmapTemp );
+  FInternalBitmap.Canvas.Draw(0, 0, FBitmapDisplay);
+  if FIsDrawing then FInternalBitmap.Canvas.Draw(0, 0, FBitmapTemp);
 
-  if Assigned(FOnPaint) then FOnPaint(Self);  
+  Canvas.Draw(0, 0, FInternalBitmap);
+
+  if Assigned(FOnPaint) then FOnPaint(Self);
 end;
 
 procedure TWhiteBoard.Prepare;
