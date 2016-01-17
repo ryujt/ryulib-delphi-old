@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.408,=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2015-04-02 17:30:31.970,=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2015-04-02 17:30:42.879,D:\Projects\Lib\RyuLib for Delphi\Samples\MouseEventControl\_fmMain.dfm=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>2015-04-02 17:30:42.879,D:\Projects\Lib\RyuLib for Delphi\Samples\MouseEventControl\_fmMain.pas=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2015-04-02 17:30:44.600,D:\Projects\Lib\RyuLib for Delphi\Samples\MouseEventControl\Sample.dproj=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2015-04-02 17:31:38.066,=D:\Projects\Lib\RyuLib for Delphi\Samples\MouseEventControl\Unit1.pas</Transaction>
+    <Transaction>2015-04-02 17:31:55.228,D:\Projects\Lib\RyuLib for Delphi\XE7\MouseEventControl.pas=D:\Projects\Lib\RyuLib for Delphi\Samples\MouseEventControl\Unit1.pas</Transaction>
+    <Transaction>2015-04-02 18:28:32.707,D:\Projects\Lib\RyuLib for Delphi\XE7\MouseEventControl.pas=</Transaction>
+  </Transactions>
+</BorlandProject>

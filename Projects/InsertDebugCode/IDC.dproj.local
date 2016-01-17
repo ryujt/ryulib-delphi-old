@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.852,=D:\Projects\Pilot\Projects\InsertDebugCode\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.395,=D:\Projects\Pilot\Projects\InsertDebugCode\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.390,=D:\Projects\Pilot\Projects\InsertDebugCode\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.217,C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit1.dfm=D:\Projects\Pilot\Projects\InsertDebugCode\_fmMain.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.357,=D:\Projects\Pilot\Projects\InsertDebugCode\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.689,D:\Projects\Pilot\Projects\InsertDebugCode\Unit1.pas=D:\Projects\Pilot\Projects\InsertDebugCode\ScanMgr.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.734,D:\Projects\Lib\RyuLib for Delphi\Projects\InsertDebugCode\DebugCode.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.238,D:\Projects\Pilot\Projects\InsertDebugCode\Unit1.pas=D:\Projects\Pilot\Projects\InsertDebugCode\InsertDebugCode.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.534,D:\Projects\Pilot\Projects\InsertDebugCode\Unit1.pas=D:\Projects\Pilot\Projects\InsertDebugCode\ScanMethod.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.910,D:\Projects\Pilot\Projects\InsertDebugCode\Unit1.pas=D:\Projects\Pilot\Projects\InsertDebugCode\ScanMethod.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.550,=D:\Projects\Lib\RyuLib for Delphi\Projects\InsertDebugCode\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.075,=D:\Projects\Lib\RyuLib for Delphi\Projects\InsertDebugCode\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.900,D:\Projects\Lib\RyuLib for Delphi\Projects\InsertDebugCode\Unit1.pas=D:\Projects\Lib\RyuLib for Delphi\Projects\InsertDebugCode\Config.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.267,=D:\Projects\Pilot\Projects\InsertDebugCode\SelectPathDlg.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.821,D:\Projects\Lib\RyuLib for Delphi\Projects\InsertDebugCode\Unit1.pas=D:\Projects\Lib\RyuLib for Delphi\Projects\InsertDebugCode\DebugCode.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.943,C:\Users\종택\Documents\Embarcadero\Studio\Projects\Project1.dproj=D:\Projects\Pilot\Projects\InsertDebugCode\IDC.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.148,D:\Projects\Pilot\Projects\InsertDebugCode\ScanMethod.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.998,=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.217,C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit1.pas=D:\Projects\Pilot\Projects\InsertDebugCode\_fmMain.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.408,=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+  </Transactions>
+</BorlandProject>
