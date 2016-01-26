@@ -3,9 +3,116 @@ unit WebFile;
 interface
 
 uses
-  ExtActns;
+  Disk, IdComponent, IdHTTP,
+  Windows, SysUtils, Classes;
+
+type
+  TDownloadingEvent = procedure (Sender:TObject; AFileSize,ACurrent:integer) of object;
+
+  TWebFile = class (TComponent)
+  private
+    FIdHTTP : TIdHTTP;
+    procedure on_WorkBegin(ASender: TObject; AWorkMode: TWorkMode; AWorkCountMax: Int64);
+    procedure on_Work(ASender: TObject; AWorkMode: TWorkMode; AWorkCount: Int64);
+  private
+    FCurrentSize: integer;
+    FFileSize: integer;
+    FOnDownloadBegin: TNotifyEvent;
+    FOnDownloading: TDownloadingEvent;
+    FOnDownloadEnd: TNotifyEvent;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+
+    procedure Download(AURL,AFileName:string);
+    procedure Stop;
+  published
+    property CurrentSize : integer read FCurrentSize;
+    property FileSize : integer read FFileSize;
+    property OnDownloadBegin : TNotifyEvent read FOnDownloadBegin write FOnDownloadBegin;
+    property OnDownloading : TDownloadingEvent read FOnDownloading write FOnDownloading;
+    property OnDownloadEnd : TNotifyEvent read FOnDownloadEnd write FOnDownloadEnd;
+  end;
 
 implementation
+
+{ TWebFile }
+
+constructor TWebFile.Create(AOwner: TComponent);
+begin
+  inherited;
+
+  FIdHTTP := TIdHTTP.Create(Self);
+  FIdHTTP.OnWorkBegin := on_WorkBegin;
+  FIdHTTP.OnWork := on_Work;
+end;
+
+destructor TWebFile.Destroy;
+begin
+  FreeAndNil(FIdHTTP);
+
+  inherited;
+end;
+
+procedure TWebFile.Download(AURL,AFileName: string);
+var
+  fsDst : TFileStream;
+  Expires : TDateTime;
+begin
+  FFileSize := 0;
+  FCurrentSize := 0;
+
+  fsDst := TFileStream.Create(AFileName, fmCreate);
+  try
+    try
+      FIdHTTP.Disconnect;
+    except
+    end;
+
+    try
+      Expires := 0;
+      FIdHTTP.Request.CacheControl := 'no-cache';
+      FIdHTTP.Request.Pragma := 'no-cache';
+      FIdHTTP.Request.Expires := Expires;
+
+      FIdHTTP.Get(AURL, fsDst);
+    except
+      on E: Exception do begin
+        OutputDebugString(PChar(Format('TWebFile.Download: %s', [E.Message])));
+      end;
+    end;
+  finally
+    fsDst.Free;
+  end;
+
+  if Assigned(FOnDownloadEnd) then FOnDownloadEnd(Self);
+end;
+
+procedure TWebFile.on_Work(ASender: TObject; AWorkMode: TWorkMode;
+  AWorkCount: Int64);
+begin
+  if AWorkMode <> wmRead then Exit;
+  if not FIdHTTP.Connected then Exit;
+
+  FCurrentSize := AWorkCount;
+
+  if Assigned(FOnDownloading) then FOnDownloading(Self, FFileSize, FCurrentSize);
+end;
+
+procedure TWebFile.on_WorkBegin(ASender: TObject; AWorkMode: TWorkMode;
+  AWorkCountMax: Int64);
+begin
+  if AWorkMode <> wmRead then Exit;
+
+  FFileSize := AWorkCountMax;
+
+  if Assigned(FOnDownloadBegin) then FOnDownloadBegin(Self);
+end;
+
+procedure TWebFile.Stop;
+begin
+  FIdHTTP.Disconnect;
+end;
 
 end.
 
