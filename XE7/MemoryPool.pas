@@ -57,7 +57,39 @@ type
     function GetMem(ASize:integer):pointer; overload; override;
   end;
 
+/// 전역에서 사용 할 수 있는 메모리 풀 생성
+procedure CreateMemoryPool(APoolSize:int64);
+
+function GetMemory(ASize:integer):pointer; overload;
+procedure GetMemory(var AData:pointer; ASize:integer); overload;
+
 implementation
+
+var
+  MemoryPoolObject : TMemoryPool = nil;
+
+procedure CreateMemoryPool(APoolSize:int64);
+begin
+  {$IFDEF CPUX86}
+    MemoryPoolObject := TMemoryPool32.Create(APoolSize);
+  {$ENDIF}
+
+  {$IFDEF CPUX64}
+    MemoryPoolObject := TMemoryPool64.Create(APoolSize);
+  {$ENDIF}
+end;
+
+function GetMemory(ASize:integer):pointer; overload;
+begin
+  if MemoryPoolObject = nil then raise Exception.Create('MemoryPool.pas - MemoryPoolObject = nil');
+  Result := MemoryPoolObject.GetMem(ASize);
+end;
+
+procedure GetMemory(var AData:pointer; ASize:integer); overload;
+begin
+  if MemoryPoolObject = nil then raise Exception.Create('MemoryPool.pas - MemoryPoolObject = nil');
+  MemoryPoolObject.GetMem(AData, ASize);
+end;
 
 { TMemoryPool64 }
 
