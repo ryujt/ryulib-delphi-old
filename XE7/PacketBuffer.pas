@@ -3,7 +3,7 @@ unit PacketBuffer;
 interface
 
 uses
-  DynamicQueue,
+  RyuLibBase, DynamicQueue,
   Classes, SysUtils, SyncObjs;
 
 type
@@ -40,50 +40,6 @@ type
   end;
 
 implementation
-
-type
-  TPacket = class
-  private
-  public
-    Data : pointer;
-    Size : integer;
-    Tag : pointer;
-    constructor Create(AData:pointer; ASize:integer); reintroduce; overload;
-    constructor Create(AData:pointer; ASize:integer; ATag:pointer); reintroduce; overload;
-  end;
-
-{ TPacket }
-
-constructor TPacket.Create(AData: pointer; ASize: integer);
-begin
-  inherited Create;
-
-  // TODO : 중복 제거
-  Size := ASize;
-  if Size <= 0 then begin
-    Data := nil;
-  end else begin
-    GetMem(Data, Size);
-    Move(AData^, Data^, Size);
-  end;
-
-  Tag := nil;
-end;
-
-constructor TPacket.Create(AData: pointer; ASize: integer; ATag: pointer);
-begin
-  inherited Create;
-
-  Size := ASize;
-  if Size <= 0 then begin
-    Data := nil;
-  end else begin
-    GetMem(Data, Size);
-    Move(AData^, Data^, Size);
-  end;
-
-  Tag := ATag;
-end;
 
 { TPacketBuffer }
 
