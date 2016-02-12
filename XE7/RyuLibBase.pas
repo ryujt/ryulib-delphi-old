@@ -38,6 +38,7 @@ type
   TProcedureReference<T> = reference to procedure(Context:T);
 
   TBooleanResultEvent = function (Sender:TObject):boolean of object;
+  TPacketEvent = procedure (Sender:TObject; APacket:TPacket) of object;
   TDataEvent = procedure (Sender:TObject; AData:pointer; ASize:integer) of object;
   TDataAndTagEvent = procedure (Sender:TObject; AData:pointer; ASize:integer; ATag:pointer) of object;
   TIntegerEvent = procedure (Sender:TObject; AValue:Integer) of object;
