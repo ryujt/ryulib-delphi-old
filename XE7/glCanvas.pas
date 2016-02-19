@@ -56,6 +56,7 @@ type
     FStretch: boolean;
     FOnError: TIntegerEvent;
     FUseGDI: boolean;
+    FIsBusy: boolean;
     function GetPenColor: TColor;
     function GetTransparentColor: TColor;
     procedure SetPenColor(const Value: TColor);
@@ -83,6 +84,9 @@ type
     property Stretch : boolean read FStretch write SetStretch;
     property PenColor : TColor read GetPenColor write SetPenColor;
     property TransparentColor : TColor read GetTransparentColor write SetTransparentColor;
+
+    /// 대기 중인 Bitmap이 있음.
+    property IsBusy : boolean read FIsBusy;
 
     /// OpenGL을 사용하지 않고 GDI를 통해서만 그리기로 전환
     property UseGDI : boolean read FUseGDI write SetUseGDI;
@@ -175,6 +179,7 @@ begin
   FUseGDI := false;
 
   FCanDraw := false;
+  FIsBusy := false;
   FStretch := true;
 
   DoubleBuffered := true;
@@ -219,6 +224,7 @@ begin
     FCS.Release;
   end;
 
+  FIsBusy := true;
   FSimpleThread.WakeUp;
 end;
 
@@ -234,6 +240,7 @@ begin
   end;
 
   if isBitmapReady then begin
+    FIsBusy := true;
     FSimpleThread.WakeUp;
   end;
 end;
@@ -516,6 +523,8 @@ begin
       OldHeight := 0;
     end;
 
+    FIsBusy := false;
+
     SimpleThread.SleepTight;
 
     if (not FInitialized) or (Width <> OldWidth) or (Height <> OldHeight) then begin
@@ -554,6 +563,8 @@ begin
   end else begin
     FSimpleThread.WakeUp;
   end;
+
+  FIsBusy := false;
 end;
 
 procedure TglCanvas.Resize;

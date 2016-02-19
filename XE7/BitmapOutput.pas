@@ -40,6 +40,7 @@ type
     procedure SetOnError(const Value: TIntegerEvent);
     procedure SetStrechDraw(const Value: boolean);
     procedure SetUseVideoAccelerator(const Value: boolean);
+    function GetIsBusy: boolean;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -53,6 +54,9 @@ type
     property PenColor : TColor read GetPenColor write SetPenColor;
     property StrechDraw : boolean read FStrechDraw write SetStrechDraw;
     property UseVideoAccelerator : boolean read FUseVideoAccelerator write SetUseVideoAccelerator;
+
+    /// 대기 중인 Bitmap이 있음.
+    property IsBusy : boolean read GetIsBusy;
   published
     property OnClear : TNotifyEvent read FOnClear write FOnClear;
     property OnDrawData : TDataEvent read GetOnDrawData write SetOnDrawData;
@@ -173,6 +177,11 @@ end;
 function TBitmapOutput.GetHint: string;
 begin
   Result := FglCanvas.Hint;
+end;
+
+function TBitmapOutput.GetIsBusy: boolean;
+begin
+  Result := FglCanvas.IsBusy;
 end;
 
 function TBitmapOutput.GetOnDrawData: TDataEvent;

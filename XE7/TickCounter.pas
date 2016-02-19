@@ -15,7 +15,10 @@ type
 
     procedure Start;
 
+    /// 방금 전 호출과의 시간 간격을 리턴한다.
     function Get:cardinal;
+
+    /// Start 이후 지난 시간을 리턴한다.
     function GetDuration:int64;
   end;
 
