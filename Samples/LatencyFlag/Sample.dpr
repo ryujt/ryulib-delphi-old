@@ -2,8 +2,7 @@ program Sample;
 
 uses
   Forms,
-  _fmMain in '_fmMain.pas' {fmMain},
-  LatencyFlag in '..\..\LatencyFlag.pas';
+  _fmMain in '_fmMain.pas' {fmMain};
 
 {$R *.res}
 
