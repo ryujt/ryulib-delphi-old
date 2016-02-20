@@ -19,7 +19,13 @@ type
 
     procedure Clear;
     procedure Push(AItem:T);
+
+    /// 데이터가 없을 경우에는 기다린다.  (Blocking)
     function Pop:T;
+
+    /// 데이터가 없을 경우에는 nil을 리턴한다.
+    function Get(var Aitem:T):boolean;
+
     function Peek:T;
 
     property Count : integer read GetCount;
@@ -54,6 +60,17 @@ begin
   FreeAndNil(FQueue);
 
   inherited;
+end;
+
+function TSuspensionQueue<T>.Get(var Aitem: T): boolean;
+begin
+  TMonitor.Enter(Self);
+  try
+    Result := FQueue.Count > 0;
+    if Result then Aitem := FQueue.Dequeue;
+  finally
+    TMonitor.Exit(Self);
+  end;
 end;
 
 function TSuspensionQueue<T>.GetCount: integer;
