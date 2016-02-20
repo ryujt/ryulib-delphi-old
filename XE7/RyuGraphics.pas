@@ -42,7 +42,7 @@ Procedure RotateText(Canvas:TCanvas; stText:String; X,Y,Angle:Integer);
 
 Procedure ScrollCanvasX(Canvas:TCanvas; SRect:TRect; Pixel:Integer);
 Procedure ScrollCanvasY(Canvas:TCanvas; SRect:TRect; Pixel:Integer);
-Function  RatioSize(Source,Target:TPoint):TPoint; overload;
+function RatioSize(Source,Target:TPoint):TPoint; overload;
 Procedure RatioSize(Source,Target:TControl); overload;
 Procedure SetClipRect(Canvas:TCanvas; R:TRect);
 
@@ -433,10 +433,10 @@ begin
   Result := RGB(RValue, GValue, BValue);
 end;
 
-Function  RatioSize(Source,Target:TPoint):TPoint;
+function RatioSize(Source,Target:TPoint):TPoint;
 var
   rSRatio, rTRatio, rRatio : double;
-Begin
+begin
   if (Source.X = 0) or (Target.X = 0) or (Source.Y = 0) or (Target.Y = 0) then begin
     Result := Source;
     Exit;
@@ -445,17 +445,17 @@ Begin
   rSRatio:= Source.Y / Source.X;
   rTRatio:= Target.Y / Target.X;
 
-  If rSRatio > rTRatio then
+  if rSRatio > rTRatio then
     // 원본의 세로축의 비율이 크다.  길쭉한 모양으로
     rRatio:= Source.Y / Target.Y
 
-  Else
+  else
     //원본의 가로축의 비율이 크다.  넓적한 모양으로
     rRatio:= Source.X / Target.X;
 
   Result.X:= Trunc(Source.X / rRatio);
   Result.Y:= Trunc(Source.Y / rRatio);
-End;
+end;
 
 Procedure RatioSize(Source,Target:TControl);
 Var
