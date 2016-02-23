@@ -23,7 +23,7 @@ type
     function get_Task:TObject;
   private
     FSimpleThread : TSimpleThread;
-    procedure on_Repeat(Sender:TObject);
+    procedure on_FSimpleThread_Execute(ASimpleThread:TSimpleThread);
   private
     FOnTask: TDataAndTagEvent;
     FOnTerminate: TNotifyEvent;
@@ -135,7 +135,7 @@ begin
   FCS := TCriticalSection.Create;
   FTasks := TDynamicQueue.Create(false);
 
-  FSimpleThread := TSimpleThread.Create(on_Repeat);
+  FSimpleThread := TSimpleThread.Create('TTaskQueue.Create', on_FSimpleThread_Execute);
 end;
 
 destructor TTaskQueue.Destroy;
@@ -176,14 +176,11 @@ begin
   end;
 end;
 
-procedure TTaskQueue.on_Repeat(Sender: TObject);
-var
-  SimpleThread : TSimpleThread absolute Sender;
+procedure TTaskQueue.on_FSimpleThread_Execute(ASimpleThread:TSimpleThread);
 begin
-  while not SimpleThread.Terminated do begin
+  while not ASimpleThread.Terminated do begin
     do_Tasks;
-
-    SimpleThread.SleepTight;
+    ASimpleThread.SleepTight;
   end;
 
   Clear;

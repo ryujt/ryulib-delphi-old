@@ -37,7 +37,7 @@ type
     procedure do_WM_Error(var AMsg:TMessage); message WM_Error;
   private
     FSimpleThread : TSimpleThread;
-    procedure on_Execute(Sender:TObject);
+    procedure on_FSimpleThread_Execute(ASimpleThread:TSimpleThread);
   public
     constructor Create(AURL:string; ACallBack:TCallBack); reintroduce;
   end;
@@ -51,8 +51,7 @@ begin
   FURL := Trim(AURL);
   FCallBack := ACallBack;
 
-  FSimpleThread := TSimpleThread.Create(on_Execute);
-  FSimpleThread.Name := 'TDownloader';
+  FSimpleThread := TSimpleThread.Create('TDownloader', on_FSimpleThread_Execute);
 end;
 
 procedure TDownloader.do_WM_Downloaded(var AMsg: TMessage);
@@ -74,7 +73,7 @@ begin
   FreeAndNil(Self);
 end;
 
-procedure TDownloader.on_Execute(Sender:TObject);
+procedure TDownloader.on_FSimpleThread_Execute(ASimpleThread:TSimpleThread);
 const
   JPEG_SOI_Marker : word = $D8FF;
 var

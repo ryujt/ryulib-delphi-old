@@ -8,7 +8,11 @@ uses
   Windows, Classes, SysUtils;
 
 type
-  TSimpleThreadProcedure = reference to procedure(AContext:pointer);
+  TSimpleThread = class;
+
+  TSimpleThreadProcedure = reference to procedure(ASimpleThread:TSimpleThread);
+
+  TSimpleThreadEvent = procedure (ASimpleThread:TSimpleThread) of object;
 
   {*
     A Simple thread class that can change stack size for it.
@@ -19,7 +23,7 @@ type
     FIsRunning : boolean;
     procedure init;
   private
-    FOnExecute: TNotifyEvent;
+    FOnExecute: TSimpleThreadEvent;
     procedure do_Execute;
   private
     FAnonymousContext : pointer;
@@ -39,11 +43,11 @@ type
   public
     class var StackSize : integer;
 
-    constructor Create; overload;
-    constructor Create(AStackSize:integer); overload;
-    constructor Create(AEventHandle:TNotifyEvent); overload;
-    constructor Create(AContext:pointer; AProcedure:TSimpleThreadProcedure); overload;
-    constructor Create(AStackSize:integer; AEventHandle:TNotifyEvent); overload;
+    constructor Create(AName:string); overload;
+    constructor Create(AName:string; AStackSize:integer); overload;
+    constructor Create(AName:string; AEventHandle:TSimpleThreadEvent); overload;
+    constructor Create(AName:string; AContext:pointer; AProcedure:TSimpleThreadProcedure); overload;
+    constructor Create(AName:string; AStackSize:integer; AEventHandle:TSimpleThreadEvent); overload;
 
     procedure TerminateNow;
 
@@ -87,35 +91,42 @@ begin
   AddThreadObject( FHandle );
 end;
 
-constructor TSimpleThread.Create;
+constructor TSimpleThread.Create(AName:string);
 begin
-  inherited;
+  inherited Create;
+
+  FName := AName;
 
   init;
   BeginSimpleThread(StackSize);
 end;
 
-constructor TSimpleThread.Create(AStackSize: integer);
+constructor TSimpleThread.Create(AName:string; AStackSize: integer);
 begin
   inherited Create;
+
+  FName := AName;
 
   init;
   BeginSimpleThread(AStackSize);
 end;
 
-constructor TSimpleThread.Create(AEventHandle: TNotifyEvent);
+constructor TSimpleThread.Create(AName:string; AEventHandle: TSimpleThreadEvent);
 begin
   inherited Create;
+
+  FName := AName;
 
   FOnExecute := AEventHandle;
   init;
   BeginSimpleThread(StackSize);
 end;
 
-constructor TSimpleThread.Create(AStackSize: integer;
-  AEventHandle: TNotifyEvent);
+constructor TSimpleThread.Create(AName:string; AStackSize: integer; AEventHandle: TSimpleThreadEvent);
 begin
   inherited Create;
+
+  FName := AName;
 
   FOnExecute := AEventHandle;
   init;
@@ -133,9 +144,11 @@ begin
   end;
 end;
 
-constructor TSimpleThread.Create(AContext: pointer; AProcedure: TSimpleThreadProcedure);
+constructor TSimpleThread.Create(AName:string; AContext: pointer; AProcedure: TSimpleThreadProcedure);
 begin
   inherited Create;
+
+  FName := AName;
 
   FAnonymousContext := AContext;
   FAnonymousProcedure := AProcedure;

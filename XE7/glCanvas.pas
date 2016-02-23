@@ -35,7 +35,7 @@ type
     procedure glDraw;
   private
     FSimpleThread : TSimpleThread;
-    procedure on_Repeat(Sender:TObject);
+    procedure on_FSimpleThread_Execute(ASimpleThread:TSimpleThread);
   protected
     procedure Resize; override;
     procedure Paint; override;
@@ -203,7 +203,7 @@ begin
   FBitmapLayer.TransparentColor := DEFAULT_TRANSPARENT_COLOR;
   FBitmapLayer.Transparent := true;
 
-  FSimpleThread := TSimpleThread.Create( on_Repeat );
+  FSimpleThread := TSimpleThread.Create('TglCanvas', on_FSimpleThread_Execute);
   FSimpleThread.FreeOnTerminate := false;
 end;
 
@@ -491,12 +491,11 @@ begin
   end;
 end;
 
-procedure TglCanvas.on_Repeat(Sender: TObject);
+procedure TglCanvas.on_FSimpleThread_Execute(ASimpleThread:TSimpleThread);
 var
   OldWidth, OldHeight : integer;
-  SimpleThread : TSimpleThread absolute Sender;
 begin
-  SimpleThread.SleepTight;
+  ASimpleThread.SleepTight;
 
   OldWidth  := 0;
   OldHeight := 0;
@@ -511,7 +510,7 @@ begin
   except
   end;
 
-  while not SimpleThread.Terminated do begin
+  while not ASimpleThread.Terminated do begin
     try
       if FInitialized and IsWindowVisible(Handle) then glDraw
       else begin
@@ -525,7 +524,7 @@ begin
 
     FIsBusy := false;
 
-    SimpleThread.SleepTight;
+    ASimpleThread.SleepTight;
 
     if (not FInitialized) or (Width <> OldWidth) or (Height <> OldHeight) then begin
       try
