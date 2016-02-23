@@ -3,7 +3,7 @@ unit glCanvas;
 interface
 
 uses
-  DebugTools, RyuLibBase, SimpleThread, RyuGraphics, OpenCV,
+  DebugTools, RyuLibBase, SimpleThread, RyuGraphics,
   Windows, SysUtils, Classes, Controls, Graphics, SyncObjs;
 
 const
@@ -325,7 +325,7 @@ begin
         FBitmapResize.Width  := Width;
         FBitmapResize.Height := Height;
 
-        if FStretch then ResizeBitmap32(FBitmap, FBitmapResize)
+        if FStretch then SmoothResize(FBitmap, FBitmapResize)
         else AssignBitmap(FBitmap, FBitmapResize);
 
         if not FIsFBitmapLayerClear then begin
