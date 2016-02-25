@@ -43,6 +43,7 @@ type
   public
     class var StackSize : integer;
 
+    constructor Create; overload;
     constructor Create(AName:string); overload;
     constructor Create(AName:string; AStackSize:integer); overload;
     constructor Create(AName:string; AEventHandle:TSimpleThreadEvent); overload;
@@ -131,6 +132,14 @@ begin
   FOnExecute := AEventHandle;
   init;
   BeginSimpleThread(AStackSize);
+end;
+
+constructor TSimpleThread.Create;
+begin
+  inherited Create;
+
+  init;
+  BeginSimpleThread(StackSize);
 end;
 
 function AnonymousThreadProc(Parameter : Pointer) : Integer;
