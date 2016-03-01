@@ -55,7 +55,6 @@ type
     constructor Create(ASize:integer); reintroduce; overload;
     constructor Create(AData:pointer; ASize:integer); reintroduce; overload;
     constructor Create(AData:pointer; ASize:integer; ATag:DWord); reintroduce; overload;
-
     constructor Create(AText:string); reintroduce; overload;
 
     destructor Destroy; override;
@@ -118,8 +117,6 @@ end;
 
 constructor TPacket.Create(AData: pointer; ASize: integer);
 begin
-  inherited Create;
-
   Size := ASize;
   if Size <= 0 then begin
     Data := nil;
@@ -133,8 +130,6 @@ end;
 
 constructor TPacket.Create(AData: pointer; ASize: integer; ATag: pointer);
 begin
-  inherited Create;
-
   Size := ASize;
   if Size <= 0 then begin
     Data := nil;
@@ -190,8 +185,6 @@ end;
 
 constructor TMemory.Create(AData: pointer; ASize: integer; ATag: DWord);
 begin
-  inherited Create;
-
   FSize := ASize;
   if FSize <= 0 then begin
     FData := nil;
@@ -205,8 +198,6 @@ end;
 
 constructor TMemory.Create(AData: pointer; ASize: integer);
 begin
-  inherited Create;
-
   FSize := ASize;
   if FSize <= 0 then begin
     FData := nil;
@@ -220,8 +211,6 @@ end;
 
 constructor TMemory.Create(ASize: integer);
 begin
-  inherited Create;
-
   FSize := ASize;
   if FSize <= 0 then begin
     FData := nil;
@@ -249,8 +238,6 @@ end;
 
 constructor TMemory.Create(AText: string);
 begin
-  inherited Create;
-
   TextToData( AText, FData, FSize );
 
   Tag := 0;

@@ -38,7 +38,7 @@ begin
 
   FActive := false;
   FInterval := DEFAULT_INTERVAL;
-  FTickCount := FInterval * 2;
+  FTickCount := DEFAULT_INTERVAL * 2;
 end;
 
 function TVitalChecker.GetIsAlive: boolean;

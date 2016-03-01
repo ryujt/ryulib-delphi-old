@@ -26,7 +26,6 @@ type
     FOnExecute: TSimpleThreadEvent;
     procedure do_Execute;
   private
-    FAnonymousContext : pointer;
     FAnonymousProcedure : TSimpleThreadProcedure;
     procedure do_ExecuteAnonymous;
   protected
@@ -72,6 +71,7 @@ type
 
 implementation
 
+
 { TSimpleThread }
 
 function SimpleThreadProc(Parameter : Pointer) : Integer;
@@ -94,8 +94,6 @@ end;
 
 constructor TSimpleThread.Create(AName:string);
 begin
-  inherited Create;
-
   FName := AName;
 
   init;
@@ -104,8 +102,6 @@ end;
 
 constructor TSimpleThread.Create(AName:string; AStackSize: integer);
 begin
-  inherited Create;
-
   FName := AName;
 
   init;
@@ -114,8 +110,6 @@ end;
 
 constructor TSimpleThread.Create(AName:string; AEventHandle: TSimpleThreadEvent);
 begin
-  inherited Create;
-
   FName := AName;
 
   FOnExecute := AEventHandle;
@@ -125,8 +119,6 @@ end;
 
 constructor TSimpleThread.Create(AName:string; AStackSize: integer; AEventHandle: TSimpleThreadEvent);
 begin
-  inherited Create;
-
   FName := AName;
 
   FOnExecute := AEventHandle;
@@ -136,8 +128,6 @@ end;
 
 constructor TSimpleThread.Create;
 begin
-  inherited Create;
-
   init;
   BeginSimpleThread(StackSize);
 end;
@@ -155,11 +145,8 @@ end;
 
 constructor TSimpleThread.Create(AName:string; AContext: pointer; AProcedure: TSimpleThreadProcedure);
 begin
-  inherited Create;
-
   FName := AName;
 
-  FAnonymousContext := AContext;
   FAnonymousProcedure := AProcedure;
 
   init;
@@ -189,7 +176,7 @@ end;
 
 procedure TSimpleThread.do_ExecuteAnonymous;
 begin
-  FAnonymousProcedure( FAnonymousContext );
+  FAnonymousProcedure( Self );
 end;
 
 procedure TSimpleThread.Execute;

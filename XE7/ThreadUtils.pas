@@ -22,7 +22,7 @@ procedure SetThreadPriorityTurbo;
 implementation
 
 var
-  CurrentThreadPriority : Integer = THREAD_PRIORITY_HIGHEST;
+  CurrentThreadPriority : Integer = THREAD_PRIORITY_NORMAL;
   ThreadList : TList;
   CS : TCriticalSection;
 

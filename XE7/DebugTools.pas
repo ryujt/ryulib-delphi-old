@@ -3,84 +3,46 @@ unit DebugTools;
 interface
 
 uses
-  RyuLibBase,
-  Windows, Classes, SysUtils, SyncObjs;
+  Windows, Classes, SysUtils;
 
 procedure Trace(const AMsg:string);
-
-procedure SetDebugMsg(AMsg:string);
-function GetDebugMsg:string;
+function TraceCount:integer;
 
 implementation
 
 uses
-  TaskQueue;
-
-type
-  TDebugTool = class
-  private
-    FTaskQueue : TTaskQueue;
-    procedure on_Task(Sender:TObject; AData:pointer; ASize:integer; ATag:pointer);
-  public
-    constructor Create;
-  end;
+  SuspensionQueue, SimpleThread;
 
 var
-  DebugTool : TDebugTool = nil;
-
-  FCS : TCriticalSection;
-  DebugMsg : string = '';
+  Queue : TSuspensionQueue<string>;
 
 procedure Trace(const AMsg:string);
 begin
-  if DebugTool = nil then DebugTool := TDebugTool.Create;
-  DebugTool.FTaskQueue.Add( TMemory.Create(AMsg) );
+  Queue.Push('[Ryu] ' + AMsg);
 end;
 
-procedure SetDebugMsg(AMsg:string);
+function TraceCount:integer;
 begin
-  FCS.Acquire;
-  try
-    DebugMsg := AMsg;
-  finally
-    FCS.Release;
-  end;
-end;
-
-function GetDebugMsg:string;
-begin
-  FCS.Acquire;
-  try
-    Result := DebugMsg;
-  finally
-    FCS.Release;
-  end;
-end;
-
-
-{ TDebugTool }
-
-constructor TDebugTool.Create;
-begin
-  inherited;
-
-  FTaskQueue := TTaskQueue.Create;
-  FTaskQueue.OnTask := on_Task;
-end;
-
-procedure TDebugTool.on_Task(Sender: TObject; AData: pointer; ASize: integer;
-  ATag: pointer);
-var
-  Memory : TMemory absolute ATag;
-begin
-  try
-    // DebugView에서 필터링하기 위해서 테그를 붙여 둠
-    OutputDebugString( PChar('[Ryu] ' + Memory.ToString) );
-  finally
-    Memory.Free;
-  end;
+  Result := Queue.Count;
 end;
 
 initialization
-  FCS := TCriticalSection.Create;
+  Queue := TSuspensionQueue<string>.Create;
+
+  TSimpleThread.Create(
+    'DebugTools', nil,
+    procedure (ASimpleThread:TSimpleThread)
+    var
+      Msg : string;
+    begin
+      while True do begin
+        try
+          Msg := Queue.Pop;
+          OutputDebugString( PChar(Msg) );
+        except
+          //
+        end;
+      end;
+    end
+  );
 end.

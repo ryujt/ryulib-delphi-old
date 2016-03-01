@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.408,=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2016-02-29 01:45:44.081,=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2016-02-29 01:45:58.234,D:\Projects\Lib\RyuLib for Delphi\Test\Long Run Test\WaitFreeList\_fmMain.dfm=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit2.dfm</Transaction>
+    <Transaction>2016-02-29 01:45:58.234,D:\Projects\Lib\RyuLib for Delphi\Test\Long Run Test\WaitFreeList\_fmMain.pas=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2016-02-29 01:46:04.978,D:\Projects\Lib\RyuLib for Delphi\Test\Long Run Test\WaitFreeList\TestForWaitFreeList.dproj=C:\Users\종택\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2016-02-29 01:46:30.406,=D:\Projects\Lib\RyuLib for Delphi\Test\Long Run Test\WaitFreeList\Unit1.pas</Transaction>
+    <Transaction>2016-02-29 01:47:12.547,D:\Projects\Lib\RyuLib for Delphi\Test\Long Run Test\WaitFreeList\TestScenario.pas=D:\Projects\Lib\RyuLib for Delphi\Test\Long Run Test\WaitFreeList\Unit1.pas</Transaction>
+  </Transactions>
+</BorlandProject>
