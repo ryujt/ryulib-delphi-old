@@ -44,9 +44,9 @@ type
 
     constructor Create; overload;
     constructor Create(AName:string); overload;
-    constructor Create(AName:string; AStackSize:integer); overload;
     constructor Create(AName:string; AEventHandle:TSimpleThreadEvent); overload;
-    constructor Create(AName:string; AContext:pointer; AProcedure:TSimpleThreadProcedure); overload;
+    constructor Create(AName:string; AProcedure:TSimpleThreadProcedure); overload;
+    constructor Create(AName:string; AStackSize:integer); overload;
     constructor Create(AName:string; AStackSize:integer; AEventHandle:TSimpleThreadEvent); overload;
 
     procedure TerminateNow;
@@ -143,7 +143,7 @@ begin
   end;
 end;
 
-constructor TSimpleThread.Create(AName:string; AContext: pointer; AProcedure: TSimpleThreadProcedure);
+constructor TSimpleThread.Create(AName:string; AProcedure: TSimpleThreadProcedure);
 begin
   FName := AName;
 
