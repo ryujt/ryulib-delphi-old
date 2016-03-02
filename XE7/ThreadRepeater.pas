@@ -15,7 +15,7 @@ type
     FMethodHandle : TNotifyEvent;
   private
     FSimpleThread : TSimpleThread;
-    procedure on_Repeat(Sender:TObject);
+    procedure on_FSimpleThread_Execute(ASimpleThread:TSimpleThread);
     procedure on_Error(Sender:TObject; const AString:string);
   private
     FStackSize: integer;
@@ -71,8 +71,7 @@ begin
 
     FMethodHandle := AMethodHandle;
 
-    FSimpleThread := TSimpleThread.Create(FStackSize, on_Repeat);
-    FSimpleThread.Name := Name;
+    FSimpleThread := TSimpleThread.Create(Name, FStackSize, on_FSimpleThread_Execute);
   finally
     FCS.Leave;
   end;
@@ -88,15 +87,14 @@ begin
   if Assigned(FOnError) then FOnError(Self, AString);
 end;
 
-procedure TThreadRepeater.on_Repeat(Sender: TObject);
+procedure TThreadRepeater.on_FSimpleThread_Execute(ASimpleThread:TSimpleThread);
 var
   MethodHandle : TNotifyEvent;
-  Thread : TSimpleThread absolute Sender;
 begin
-  Thread.OnError := on_Error;
+  ASimpleThread.OnError := on_Error;
 
   try
-    while not Thread.Terminated do begin
+    while not ASimpleThread.Terminated do begin
       MethodHandle := FMethodHandle;
       if not Assigned(MethodHandle) then Break;
 

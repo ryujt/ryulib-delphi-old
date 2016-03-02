@@ -31,7 +31,7 @@ type
     procedure do_Timer;
   private
     FSimpleThread : TSimpleThread;
-    procedure on_Repeat(Sender:TObject);
+    procedure on_FSimpleThread_Execute(ASimpleThread:TSimpleThread);
   private
     FOnTask: TDataAndTagEvent;
     FOnTerminate: TNotifyEvent;
@@ -176,7 +176,7 @@ begin
   FCS := TCriticalSection.Create;
   FTasks := TDynamicQueue.Create(false);
 
-  FSimpleThread := TSimpleThread.Create(on_Repeat);
+  FSimpleThread := TSimpleThread.Create('', on_FSimpleThread_Execute);
 end;
 
 destructor TScheduler.Destroy;
@@ -250,19 +250,17 @@ begin
   end;
 end;
 
-procedure TScheduler.on_Repeat(Sender: TObject);
-var
-  SimpleThread : TSimpleThread absolute Sender;
+procedure TScheduler.on_FSimpleThread_Execute(ASimpleThread:TSimpleThread);
 begin
   TickCount := 0;
 
   OldTick := GetTick;
 
-  while not SimpleThread.Terminated do begin
+  while not ASimpleThread.Terminated do begin
     do_Tasks;
     do_Timer;
 
-    SimpleThread.Sleep(1);
+    ASimpleThread.Sleep(1);
   end;
 
   Clear;

@@ -56,7 +56,7 @@ type
     function GetBitmapRgn32:TBitmapRgn32;
   private
     FSimpleThread : TSimpleThread;
-    procedure on_FSimpleThread_Repeat(Sender:TObject);
+    procedure on_FSimpleThread_Repeat(ASimpleThread:TSimpleThread);
   private
     FOnFinished: TNotifyEvent;
   public
@@ -366,8 +366,7 @@ begin
   FCS := TCriticalSection.Create;
   FList := TList<TBitmapRgn32>.Create;
 
-  FSimpleThread := TSimpleThread.Create( on_FSimpleThread_Repeat );
-  FSimpleThread.Name := 'TBitmapRgn.Create';
+  FSimpleThread := TSimpleThread.Create('TBitmapRgn.Create', on_FSimpleThread_Repeat);
 end;
 
 procedure TBitmapRgn.CreateRgn(AHandle:THandle; ABitmap: TBitmap;
@@ -424,18 +423,18 @@ begin
   end;
 end;
 
-procedure TBitmapRgn.on_FSimpleThread_Repeat(Sender: TObject);
+procedure TBitmapRgn.on_FSimpleThread_Repeat(ASimpleThread:TSimpleThread);
 var
   BitmapRgn32 : TBitmapRgn32;
 begin
-  while not FSimpleThread.Terminated do begin
+  while not ASimpleThread.Terminated do begin
     BitmapRgn32 := GetBitmapRgn32;
     if BitmapRgn32 <> nil then begin
       BitmapRgn32.ExecuteBitmap;
       PostMessage(Handle, WM_USER, Integer(BitmapRgn32), Integer(BitmapRgn32));
     end;
 
-    FSimpleThread.SleepTight;
+    ASimpleThread.SleepTight;
   end;
 
 //  FreeAndNil(FCS);
