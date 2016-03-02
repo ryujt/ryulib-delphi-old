@@ -30,7 +30,7 @@ initialization
   Queue := TSuspensionQueue<string>.Create;
 
   TSimpleThread.Create(
-    'DebugTools', nil,
+    'DebugTools',
     procedure (ASimpleThread:TSimpleThread)
     var
       Msg : string;
