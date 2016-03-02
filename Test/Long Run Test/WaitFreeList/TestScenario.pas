@@ -3,13 +3,20 @@ unit TestScenario;
 interface
 
 uses
-  WaitFreeList,
-  SysUtils, Classes;
+  DebugTools, WaitFreeList, SimpleThread,
+  Windows, SysUtils, Classes;
+
+const
+  MAX_LIST_SIZE = $FF;
 
 type
   TTestScenario = class
   private
     FList : TWaitFreeObjectList;
+  private
+    FThreadAdd : TSimpleThread;
+    FThreadRemove : TSimpleThread;
+    FThreadIterate : TSimpleThread;
   public
     constructor Create;
     destructor Destroy; override;
@@ -19,21 +26,40 @@ type
 
 implementation
 
+var
+  SumOfID : integer;
+
 { TTestNode }
 
 type
   TTestNode = class (TWaitFreeObject)
   private
   public
-    Data : integer;
-    constructor Create(AData:integer); reintroduce;
+    IsDeleting : boolean;
+    ID : integer;
+  public
+    constructor Create;
+
+    function CompareWaitFreeObject(AObject:TObject):boolean; override;
+    procedure WaitFreeObjectDuplicated; override;
   end;
 
-constructor TTestNode.Create(AData: integer);
+function TTestNode.CompareWaitFreeObject(AObject: TObject): boolean;
 begin
-  inherited Create;
+  Result := TTestNode(AObject).ID = ID;
+end;
 
-  Data := AData;
+constructor TTestNode.Create;
+begin
+  inherited;
+
+  IsDeleting := false;
+  ID := Random(MAX_LIST_SIZE * 100);
+end;
+
+procedure TTestNode.WaitFreeObjectDuplicated;
+begin
+  Trace( Format('WaitFreeObjectDuplicated: %d', [ID]) );
 end;
 
 { TTestScenario }
@@ -53,7 +79,61 @@ end;
 
 procedure TTestScenario.Run;
 begin
+  FThreadAdd := TSimpleThread.Create(
+    'FThreadAdd',
+    procedure (ASimpleThread:TSimpleThread)
+    var
+      Loop, iCount : integer;
+    begin
+      while True do begin
+        iCount := MAX_LIST_SIZE - FList.Count;
+        if iCount > 0 then begin
+          for Loop := 1 to iCount do FList.Add( TTestNode.Create );
+        end;
+      end;
+    end
+  );
 
+  FThreadRemove := TSimpleThread.Create(
+    'FThreadRemove',
+    procedure (ASimpleThread:TSimpleThread)
+    var
+      iIndex, Loop : integer;
+      Target : IWaitFreeObject;
+    begin
+      while True do begin
+        if FList.Count > (MAX_LIST_SIZE div 2) then begin
+          iIndex := Random(MAX_LIST_SIZE div 2);
+
+          Loop := 0;
+          FList.Iterate(
+            procedure (WaitFreeObject:IWaitFreeObject; var NeedStop:boolean) begin
+              Target := WaitFreeObject;
+              NeedStop := (Loop >= (MAX_LIST_SIZE div 3)) and (TTestNode(Target).IsDeleting = false);
+            end
+          );
+
+          TTestNode(Target).IsDeleting := true;
+          FList.Remove(Target);
+        end;
+      end;
+    end
+  );
+
+  FThreadIterate := TSimpleThread.Create(
+    'FThreadIterate',
+    procedure (ASimpleThread:TSimpleThread)
+    begin
+      while True do begin
+        SumOfID := 0;
+        FList.Iterate(
+          procedure (WaitFreeObject:IWaitFreeObject) begin
+            SumOfID := SumOfID + TTestNode(WaitFreeObject).ID;
+          end
+        );
+      end;
+    end
+  );
 end;
 
 end.
