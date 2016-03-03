@@ -1,6 +1,8 @@
 __history
 *.~* 
 *.dcu 
+*.bpl
+*.dcp
 *.local 
 *.identcache 
 *.drc 
