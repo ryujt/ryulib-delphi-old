@@ -3,7 +3,7 @@ unit PacketProcessor;
 interface
 
 uses
-  RyuLibBase, SimpleThread, DynamicQueue,
+  RyuLibBase, ThreadUtils, SimpleThread, DynamicQueue,
   Windows, SysUtils, Classes, SyncObjs;
 
 type
@@ -18,7 +18,7 @@ type
     function get_Packet(var APacket:pointer):boolean;
   private
     FSimpleThread : TSimpleThread;
-    procedure on_Repeat(Sender:TObject);
+    procedure on_Repeat(ASimpleThread:TSimpleThread);
   private
     FOnData: TDataEvent;
     FOnDataAndTag: TDataAndTagEvent;
@@ -182,8 +182,9 @@ begin
   FCS := TCriticalSection.Create;
   FQueue := TDynamicQueue.Create(false);
 
-  FSimpleThread := TSimpleThread.Create( on_Repeat );
+  FSimpleThread := TSimpleThread.Create('TPacketProcessor', on_Repeat);
 
+  RemoveThreadObject(FSimpleThread.Handle);
   SetThreadPriority(FSimpleThread.Handle, THREAD_PRIORITY_HIGHEST);
 end;
 
@@ -243,12 +244,11 @@ begin
   end;
 end;
 
-procedure TPacketProcessor.on_Repeat(Sender: TObject);
+procedure TPacketProcessor.on_Repeat(ASimpleThread:TSimpleThread);
 var
   Packet : TPacket;
-  SimpleThread : TSimpleThread absolute Sender;
 begin
-  while not SimpleThread.Terminated do begin
+  while not ASimpleThread.Terminated do begin
     while get_Packet(Pointer(Packet)) do begin
       try
         if Assigned(FOnData) then FOnData(Self, Packet.Data, Packet.Size);
@@ -259,9 +259,9 @@ begin
       end;
     end;
 
-    if not SimpleThread.Terminated then begin
-      if FSeamlessProcessor then SimpleThread.Sleep(1)
-      else SimpleThread.SleepTight;
+    if not ASimpleThread.Terminated then begin
+      if FSeamlessProcessor then ASimpleThread.Sleep(1)
+      else ASimpleThread.SleepTight;
     end;
   end;
 
