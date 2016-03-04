@@ -67,9 +67,9 @@ type
   end;
 
 // TODO: 모든 함수 접근을 싱크 할 필요 있는 지 검토
-procedure BitmapToJpeg(ASrc:pointer; AWidth,AHeight:integer; var ADst:pointer; var ADstSize:integer; AQuality:integer=100);
-procedure BitmapToJpegCopy(ASrc:pointer; AWidth,AHeight:integer; var ADst:pointer; var ADstSize:integer; AQuality:integer=100);
-procedure JpegToBitmap(ASrc:pointer; ASrcSize:integer; ADst:pointer; AWidth,AHeight:integer);
+function BitmapToJpeg(ASrc:pointer; AWidth,AHeight:integer; var ADst:pointer; var ADstSize:integer; AQuality:integer=100):boolean;
+function BitmapToJpegCopy(ASrc:pointer; AWidth,AHeight:integer; var ADst:pointer; var ADstSize:integer; AQuality:integer=100):boolean;
+function JpegToBitmap(ASrc:pointer; ASrcSize:integer; ADst:pointer; AWidth,AHeight:integer):boolean;
 
 implementation
 
@@ -104,7 +104,7 @@ var
   TurboJpegEncoderHandle : pointer = nil;
   TurboJpegDecoderHandle : pointer = nil;
 
-procedure BitmapToJpeg(ASrc:pointer; AWidth,AHeight:integer; var ADst:pointer; var ADstSize:integer; AQuality:integer=100);
+function BitmapToJpeg(ASrc:pointer; AWidth,AHeight:integer; var ADst:pointer; var ADstSize:integer; AQuality:integer=100):boolean;
 var
   pJpeg : pointer;
   jpegSize : DWord;
@@ -112,14 +112,16 @@ begin
   pJpeg := nil;
   jpegSize := 0;
 
-  tjCompress2(
+  Result := 0 = tjCompress2(
     TurboJpegEncoderHandle,
     ASrc, AWidth, 0, AHeight, Integer(TJPF_BGRA),
     pJpeg, jpegSize,
     Integer(TJSAMP_422), AQuality, TJFLAG_FASTDCT + TJFLAG_BOTTOMUP
   );
 
-  GetMem( ADst, jpegSize );
+  if not Result then Exit;
+
+  GetMem(ADst, jpegSize);
 
   try
     Move( pJpeg^, ADst^, jpegSize );
@@ -130,7 +132,7 @@ begin
   ADstSize := jpegSize;
 end;
 
-procedure BitmapToJpegCopy(ASrc:pointer; AWidth,AHeight:integer; var ADst:pointer; var ADstSize:integer; AQuality:integer=100);
+function BitmapToJpegCopy(ASrc:pointer; AWidth,AHeight:integer; var ADst:pointer; var ADstSize:integer; AQuality:integer=100):boolean;
 var
   pJpeg : pointer;
   jpegSize : DWord;
@@ -138,15 +140,17 @@ begin
   pJpeg := nil;
   jpegSize := 0;
 
-  tjCompress2(
+  Result := 0 = tjCompress2(
     TurboJpegEncoderHandle,
     ASrc, AWidth, 0, AHeight, Integer(TJPF_BGRA),
     pJpeg, jpegSize,
     Integer(TJSAMP_422), AQuality, TJFLAG_FASTDCT + TJFLAG_BOTTOMUP
   );
 
+  if not Result then Exit;
+
   try
-    Move( pJpeg^, ADst^, jpegSize );
+    Move(pJpeg^, ADst^, jpegSize);
   finally
     tjFree( pJpeg );
   end;
@@ -154,9 +158,9 @@ begin
   ADstSize := jpegSize;
 end;
 
-procedure JpegToBitmap(ASrc:pointer; ASrcSize:integer; ADst:pointer; AWidth,AHeight:integer);
+function JpegToBitmap(ASrc:pointer; ASrcSize:integer; ADst:pointer; AWidth,AHeight:integer):boolean;
 begin
-  tjDecompress2(
+  Result := 0 = tjDecompress2(
     TurboJpegDecoderHandle,
     ASrc, ASrcSize,
     ADst, AWidth, 0, AHeight, Integer(TJPF_BGRA), TJFLAG_BOTTOMUP
