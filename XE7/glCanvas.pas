@@ -3,7 +3,7 @@ unit glCanvas;
 interface
 
 uses
-  DebugTools, RyuLibBase, SimpleThread, RyuGraphics,
+  DebugTools, RyuLibBase, SimpleThread, RyuGraphics, OpenGL,
   Windows, SysUtils, Classes, Controls, Graphics, SyncObjs;
 
 const
@@ -25,11 +25,11 @@ type
   private
     FVersionPtr : PAnsiChar;
     FVersion : AnsiString;
+    FTexture : GLuint;
     FInitialized : boolean;
     FIsFBitmapLayerClear : boolean;
     FCS : TCriticalSection;
     FBitmap : TBitmap;
-    FBitmapResize : TBitmap;
     FBitmapLayer : TBitmap;
     procedure glInit;
     procedure glDraw;
@@ -64,6 +64,7 @@ type
     procedure SetStretch(const Value: boolean);
     function GetVersion: string;
     procedure SetUseGDI(const Value: boolean);
+    function GetUseGDI: boolean;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -89,7 +90,7 @@ type
     property IsBusy : boolean read FIsBusy;
 
     /// OpenGL을 사용하지 않고 GDI를 통해서만 그리기로 전환
-    property UseGDI : boolean read FUseGDI write SetUseGDI;
+    property UseGDI : boolean read GetUseGDI write SetUseGDI;
 
     property Bitmap : TBitmap read FBitmap;
     property BitmapLayer : TBitmap read FBitmapLayer;
@@ -98,28 +99,6 @@ type
   end;
 
 implementation
-
-const
-  GL_DEPTH_BUFFER_BIT                 = $00000100;
-  GL_UNSIGNED_BYTE                    = $1401;
-  GL_COLOR_BUFFER_BIT                 = $00004000;
-  GL_VERSION                          = $1F02;
-
-type
-  GLbitfield = Cardinal;
-  GLsizei = Integer;
-  GLenum = Cardinal;
-
-  TglGetString = function  (name: GLenum): PAnsiChar; stdcall;
-  TwglCreateContext= function (DC: HDC): HGLRC; stdcall;
-  TglClear = procedure (mask: GLbitfield); stdcall;
-  TglDrawPixels = procedure (width, height: GLsizei; format, pixeltype: GLenum; pixels: Pointer); stdcall;
-
-var
-  glGetString : TglGetString = nil;
-  wglCreateContext : TwglCreateContext = nil;
-  glClear : TglClear = nil;
-  glDrawPixels : TglDrawPixels = nil;
 
 { TglCanvas }
 
@@ -169,6 +148,8 @@ const
 begin
   inherited;
 
+  BorderWidth := 0;
+
   MakeOpaque( Self );
 
   FVersionPtr := nil;
@@ -190,10 +171,6 @@ begin
   FBitmap := TBitmap.Create;
   FBitmap.Canvas.Brush.Color := clBlack;
   FBitmap.PixelFormat := pf32bit;
-
-  FBitmapResize := TBitmap.Create;
-  FBitmapResize.Canvas.Brush.Color := clBlack;
-  FBitmapResize.PixelFormat := pf32bit;
 
   FBitmapLayer := TBitmap.Create;
   FBitmapLayer.PixelFormat := pf32bit;
@@ -253,6 +230,12 @@ end;
 function TglCanvas.GetTransparentColor: TColor;
 begin
   Result := FBitmapLayer.TransparentColor;
+end;
+
+function TglCanvas.GetUseGDI: boolean;
+begin
+  if not isGL_Working then Result := true
+  else Result := FUseGDI;
 end;
 
 function TglCanvas.GetVersion: string;
@@ -317,36 +300,43 @@ const
   GL_BGRA = $80E1;
 begin
   try
-    if (not FUseGDI) and Assigned(glClear) then glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+    if not UseGDI then glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
 
     if ((FBitmap.Width * FBitmap.Height) <> 0) and ((Width * Height) <> 0) then begin
       FCS.Acquire;
       try
-        FBitmapResize.Width  := Width;
-        FBitmapResize.Height := Height;
-
-        if FStretch then SmoothResize(FBitmap, FBitmapResize)
-        else AssignBitmap(FBitmap, FBitmapResize);
-
         if not FIsFBitmapLayerClear then begin
-          FBitmapLayer.Width  := FBitmapResize.Width;
-          FBitmapLayer.Height := FBitmapResize.Height;
-
-          DrawBitmap( FBitmapLayer, FBitmapResize );
+          FBitmapLayer.Width  := FBitmap.Width;
+          FBitmapLayer.Height := FBitmap.Height;
+          DrawBitmap(FBitmapLayer, FBitmap);
         end;
       finally
         FCS.Release;
       end;
 
       // OpenGL 초기화가 안되었거나 드라이버가 설치 되어 있지 않다.
-      if FUseGDI or (FVersionPtr = nil) then begin
+      if UseGDI or (FVersionPtr = nil) then begin
         Invalidate;
         Exit;
       end;
 
       FCS.Acquire;
       try
-        if Assigned(glDrawPixels) then glDrawPixels(FBitmapResize.Width, FBitmapResize.Height, GL_BGRA, GL_UNSIGNED_BYTE, FBitmapResize.ScanLine[FBitmapResize.Height-1]);
+        if (Width = FBitmap.Width) and (Height = FBitmap.Height) then begin
+          glDrawPixels(FBitmap.Width, FBitmap.Height, GL_BGRA, GL_UNSIGNED_BYTE, FBitmap.ScanLine[FBitmap.Height-1]);
+        end else begin
+          glEnable(GL_TEXTURE_2D);
+          gluBuild2DMipmaps(GL_TEXTURE_2D, 3, FBitmap.Width, FBitmap.Height, GL_BGRA, GL_UNSIGNED_BYTE, FBitmap.ScanLine[FBitmap.Height-1]);
+
+          glBegin(GL_QUADS);
+          glTexCoord2d(0.0, 0.0); glVertex2d(-1.0, -1.0);
+          glTexCoord2d(1.0, 0.0); glVertex2d(+1.0, -1.0);
+          glTexCoord2d(1.0, 1.0); glVertex2d(+1.0, +1.0);
+          glTexCoord2d(0.0, 1.0); glVertex2d(-1.0, +1.0);
+          glEnd();
+
+	        glDisable(GL_TEXTURE_2D);
+        end;
       finally
         FCS.Release;
       end;
@@ -365,14 +355,7 @@ procedure TglCanvas.glInit;
 var
   DC: HDC;
   RC: HGLRC;
-  isGL_Working : boolean;
 begin
-  isGL_Working :=
-    Assigned(glGetString) and
-    Assigned(wglCreateContext) and
-    Assigned(glClear) and
-    Assigned(glDrawPixels);
-
   if isGL_Working then begin
     try
       DC := GetDC(Handle);
@@ -382,6 +365,14 @@ begin
 
       FVersionPtr := glGetString( GL_VERSION );
       if FVersionPtr <> nil then FVersion := StrPas(FVersionPtr);
+
+      glGenTextures(1, @FTexture);
+      glBindTexture(GL_TEXTURE_2D, FTexture);
+
+      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     except
       FVersionPtr := nil;
       FVersion := '';
@@ -528,7 +519,7 @@ begin
 
     if (not FInitialized) or (Width <> OldWidth) or (Height <> OldHeight) then begin
       try
-        if (not FUseGDI) and IsWindowVisible(Handle) then begin
+        if (not UseGDI) and IsWindowVisible(Handle) then begin
           glInit;
 
           OldWidth := Width;
@@ -548,16 +539,26 @@ begin
 end;
 
 procedure TglCanvas.Paint;
+var
+  BitmapResized : TBitmap;
 begin
   inherited;
 
   // OpenGL 초기화가 안되었거나 드라이버가 설치 되어 있지 않다.
-  if FUseGDI or (FVersionPtr = nil) then begin
+  if UseGDI or (FVersionPtr = nil) then begin
+    BitmapResized := TBitmap.Create;
     FCS.Acquire;
     try
-      Canvas.Draw( 0, 0, FBitmapResize );
+      BitmapResized.PixelFormat := pf32bit;
+      BitmapResized.Width := Width;
+      BitmapResized.Height := Height;
+
+      SmoothResize(FBitmap, BitmapResized, true);
+
+      Canvas.Draw(0, 0, BitmapResized);
     finally
       FCS.Release;
+      BitmapResized.Free;
     end;
   end else begin
     FSimpleThread.WakeUp;
@@ -598,15 +599,4 @@ begin
   FUseGDI := Value;
 end;
 
-var
-  dllHandle : Cardinal;
-
-initialization
-  dllHandle := LoadLibrary( 'opengl32.dll' );
-  if dllHandle = 0 then Exit;
-
-  @glGetString := GetProcAddress( dllHandle, 'glGetString' );
-  @wglCreateContext := GetProcAddress( dllHandle, 'wglCreateContext' );
-  @glClear := GetProcAddress( dllHandle, 'glClear' );
-  @glDrawPixels := GetProcAddress( dllHandle, 'glDrawPixels' );
 end.
