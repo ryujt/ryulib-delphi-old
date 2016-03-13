@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
-  <Transactions>
-    <Transaction>2015-04-09 23:53:23.421,=D:\Projects\MediaWave\HiMyTV 3.0\Lib\EncodeString.pas</Transaction>
-    <Transaction>2015-04-09 23:55:24.408,D:\Projects\MediaWave\HiMyTV 3.0\Lib\EncodeString.pas=</Transaction>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.408,D:\Projects\MediaWave\HiMyTV 3.0\Lib\EncodeString.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.421,=D:\Projects\MediaWave\HiMyTV 3.0\Lib\EncodeString.pas</Transaction>
   </Transactions>
 </BorlandProject>

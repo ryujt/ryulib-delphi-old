@@ -3,12 +3,12 @@ unit _fmMain;
 interface
 
 uses
-  LZMA, CompareBytes,
+  LZMA, CompareBytes, ScreenCapture,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
 
 const
-  DATA_SOURCE_SIZE = 1024 * 1024;
+  DATA_SOURCE_SIZE = 32 * 1024;
   BUFFER_SIZE = 1024 * 1024 * 32;
 
 type
@@ -22,6 +22,7 @@ type
   private
     FSizeOutLZMA : DWord;
     FBufferSrc, FBufferZip, FBufferUnZip : pointer;
+    FScreenCapture : TScreenCapture;
   public
   end;
 
@@ -54,17 +55,19 @@ procedure TfmMain.btLZMAClick(Sender: TObject);
 var
   Tick : Cardinal;
   iResult, iSizeIn : DWord;
+  Loop: Integer;
 begin
   iSizeIn  := DATA_SOURCE_SIZE;
   FSizeOutLZMA := BUFFER_SIZE;
 
   Tick := GetTickCount;
 
-  iResult := CompressSlow(FBufferSrc, iSizeIn, FBufferZip, FSizeOutLZMA);
+  for Loop := 1 to 100 do
+    iResult := CompressSlow(FBufferSrc, iSizeIn, FBufferZip, FSizeOutLZMA);
 //  iResult := CompressDefault(FBufferSrc, iSizeIn, FBufferZip, FSizeOutLZMA);
 //  iResult := CompressFast(FBufferSrc, iSizeIn, FBufferZip, FSizeOutLZMA);
 
-  moMsg.Lines.Add(Format('Compress: %dms, Result=%d, iSizeOut=%s', [GetTickCount-Tick, iResult, BytesStr(FSizeOutLZMA)]));
+  moMsg.Lines.Add(Format('Compress: %dms, Result=%d, iSizeOut=%s', [(GetTickCount-Tick) div 100, iResult, BytesStr(FSizeOutLZMA)]));
 end;
 
 procedure TfmMain.btTestLZMAClick(Sender: TObject);
@@ -84,19 +87,29 @@ end;
 
 procedure TfmMain.FormCreate(Sender: TObject);
 var
-  Loop: Integer;
   pData : PByte;
+  Loop, iDataSize: Integer;
 begin
   GetMem(FBufferSrc, BUFFER_SIZE);
   GetMem(FBufferZip, BUFFER_SIZE);
   GetMem(FBufferUnZip, BUFFER_SIZE);
 
-  pData := FBufferSrc;
-  for Loop := 0 to BUFFER_SIZE-1 do begin
+  FScreenCapture := TScreenCapture.Create(Self);
+  FScreenCapture.PixelFormat := pf32bit;
+  FScreenCapture.MonitorNo := 0;
+  FScreenCapture.Capture;
+
+  iDataSize := FScreenCapture.Bitmap.Width * FScreenCapture.Bitmap.Height * 4;
+  if iDataSize > DATA_SOURCE_SIZE then iDataSize := DATA_SOURCE_SIZE;
+
+  Move(FScreenCapture.Bitmap.ScanLine[FScreenCapture.Bitmap.Height-1]^, FBufferSrc^, iDataSize);
+
+//  pData := FBufferSrc;
+//  for Loop := 0 to BUFFER_SIZE-1 do begin
 //    pData^ := Random(256);
-    pData^ := Loop mod 256;
-    Inc(pData);
-  end;
+//    pData^ := Loop mod 256;
+//    Inc(pData);
+//  end;
 end;
 
 end.
