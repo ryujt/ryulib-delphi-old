@@ -33,7 +33,7 @@ type
     procedure Execute; virtual;
   private
     FName: string;
-    FHandle: THandle platform;
+    FHandle: THandle;
     FThreadID : TThreadID;
     FFreeOnTerminate: Boolean;
     FTerminated : boolean;

@@ -15,11 +15,15 @@ type
 
 implementation
 
+{$WARN SYMBOL_PLATFORM  OFF}
+
 procedure AcquireSRWLockShared(var P: Pointer); stdcall; external 'kernel32.dll' name 'AcquireSRWLockShared' delayed;
 procedure ReleaseSRWLockShared(var P: Pointer); stdcall; external 'kernel32.dll' name 'ReleaseSRWLockShared' delayed;
 
 procedure AcquireSRWLockExclusive(var P: Pointer); stdcall; external 'kernel32.dll' name 'AcquireSRWLockExclusive' delayed;
 procedure ReleaseSRWLockExclusive(var P: Pointer); stdcall; external 'kernel32.dll' name 'ReleaseSRWLockExclusive' delayed;
+
+{$WARN SYMBOL_PLATFORM  ON}
 
 { TSRWLock }
 
