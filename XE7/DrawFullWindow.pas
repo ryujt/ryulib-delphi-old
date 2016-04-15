@@ -36,4 +36,6 @@ end;
 
 initialization
   SystemParametersInfo( SPI_GETDRAGFULLWINDOWS, 0, @OldState, 0 );
+finalization
+  RestoreDrawFullWindow;
 end.
