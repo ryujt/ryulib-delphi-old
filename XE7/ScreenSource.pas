@@ -3,7 +3,7 @@ unit ScreenSource;
 interface
 
 uses
-  Windows, Classes, SysUtils, Graphics, Forms;
+  Windows, Classes, SysUtils, Vcl.Graphics, Vcl.Forms;
 
 type
   TScreenSource = class (TComponent)

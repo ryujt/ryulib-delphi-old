@@ -4,7 +4,7 @@ interface
 
 uses
   CursorCaptrue, ScreenSource,
-  Windows, Classes, SysUtils, Graphics;
+  Windows, Classes, SysUtils, Vcl.Graphics;
 
 type
   TScreenSourceType = (ssRegion, ssMonitor, ssWindow);

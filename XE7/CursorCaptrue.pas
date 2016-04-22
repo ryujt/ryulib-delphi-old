@@ -5,7 +5,7 @@ interface
 uses
   DebugTools, ZLibUtils,
   Generics.Collections,
-  Windows, Classes, SysUtils, Graphics;
+  Windows, Classes, SysUtils, Vcl.Graphics;
 
 type
   TCursorImage = class (TComponent)
