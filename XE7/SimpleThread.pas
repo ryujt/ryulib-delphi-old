@@ -171,7 +171,7 @@ begin
 
   RemoveThreadObject( FHandle );
 
-  if  Assigned(FOnTerminated) then FOnTerminated(Self);
+  if Assigned(FOnTerminated) then FOnTerminated(Self);
 end;
 
 procedure TSimpleThread.do_ExecuteAnonymous;
