@@ -3,7 +3,7 @@ unit MainScreen;
 interface
 
 uses
-  CompareBytes, RyuGraphics,
+  RyuGraphics,
   Windows, SysUtils, Classes, Forms;
 
 type
