@@ -3,12 +3,12 @@ unit _fmMain;
 interface
 
 uses
-  LZMA, CompareBytes, ScreenCapture,
+  LZMA, ScreenCapture,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
 
 const
-  DATA_SOURCE_SIZE = 32 * 1024;
+  DATA_SOURCE_SIZE = 1024 * 1024;
   BUFFER_SIZE = 1024 * 1024 * 32;
 
 type
@@ -62,12 +62,12 @@ begin
 
   Tick := GetTickCount;
 
-  for Loop := 1 to 100 do
+//  for Loop := 1 to 100 do
     iResult := CompressSlow(FBufferSrc, iSizeIn, FBufferZip, FSizeOutLZMA);
 //  iResult := CompressDefault(FBufferSrc, iSizeIn, FBufferZip, FSizeOutLZMA);
 //  iResult := CompressFast(FBufferSrc, iSizeIn, FBufferZip, FSizeOutLZMA);
 
-  moMsg.Lines.Add(Format('Compress: %dms, Result=%d, iSizeOut=%s', [(GetTickCount-Tick) div 100, iResult, BytesStr(FSizeOutLZMA)]));
+  moMsg.Lines.Add(Format('Compress: %d ms, Result=%d, iSizeOut=%s', [(GetTickCount-Tick) div 100, iResult, BytesStr(FSizeOutLZMA)]));
 end;
 
 procedure TfmMain.btTestLZMAClick(Sender: TObject);
@@ -79,7 +79,7 @@ begin
 
   iResult := Uncompress(FBufferZip, FSizeOutLZMA, FBufferUnZip, iSizeOut);
 
-  if not CompareFastBytes(FBufferSrc, FBufferUnZip, DATA_SOURCE_SIZE) then
+  if not CompareMem(FBufferSrc, FBufferUnZip, DATA_SOURCE_SIZE) then
     MessageDlg('원본과 다름', mtError, [mbOk], 0)
   else
     moMsg.Lines.Add(Format('Uncompress: %dms, Result=%d, iSizeOut=%s', [GetTickCount-Tick, iResult, BytesStr(iSizeOut)]));
