@@ -13,9 +13,6 @@ type
     destructor Destroy; override;
 
     class function Obj:T@ClassName;
-
-    procedure Initialize;
-    procedure Finalize;
   end;
 
 implementation
@@ -41,16 +38,6 @@ destructor T@ClassName.Destroy;
 begin
 
   inherited;
-end;
-
-procedure T@ClassName.Finalize;
-begin
-
-end;
-
-procedure T@ClassName.Initialize;
-begin
-
 end;
 
 initialization

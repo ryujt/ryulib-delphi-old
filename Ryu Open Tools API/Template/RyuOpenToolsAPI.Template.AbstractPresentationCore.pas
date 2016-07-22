@@ -47,9 +47,7 @@ begin
   FIsfinalized := false;
 
   FOption := TOption.Create;
-
   FView := TView.Create(Self);
-  FView.Add(Self);
 end;
 
 destructor TCore.Destroy;
@@ -67,7 +65,6 @@ begin
   if FIsfinalized then Exit;
   FIsfinalized := true;
 
-  FView.Remove(Self);
   FView.sp_Finalize;
   FView.Active := false;
 end;
