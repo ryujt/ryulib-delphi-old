@@ -9,7 +9,10 @@ const
   DEFAULT_CAPACITY = 16 * 1024;
 
 type
-  /// TMemoryStream을 이용해서 패킷을 수신 처리 할 때 알 수 없는 에러가 나서 대체 클래스를 제작하였다.
+  {*
+    TPacketReader 구현을 TMemoryStream을 이용했을 때, 아주 간혹 에러가 나서 대체 클래스를 제작하였다.
+    같은 시나리오로 롱런 테스트 했을 때 문제가 없음을 확인하였다.
+  }
   TMemoryBuffer = class
   private
     FCapacity : integer;
