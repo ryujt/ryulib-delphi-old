@@ -6,7 +6,7 @@ uses
   Classes, SysUtils;
 
 type
-  /// 이진 검색을 위한 리스트 크래스
+  /// 이진 검색을 위한 리스트 클래스
   TBinaryList = class
   private
     function GetCount: integer;
