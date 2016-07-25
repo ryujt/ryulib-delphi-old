@@ -63,6 +63,7 @@ procedure HardwareAcceleration(level: integer);  // 0: 최대, 5: 없음
 procedure AddContextMenu(AMenuName,ATitle,ACommand:string);
 
 function LocalIP: string;
+function LocalIPs: string;
 
 function TotalPhysicalSize:int64;
 function FreePhysicalSize:NativeUInt;
@@ -599,6 +600,35 @@ begin
   while pptr^[I] <> nil do begin
     Result := String(inet_ntoa(pptr^[I]^));
     if (Result <> '') and (Result <> '127.0.0.1') then Break;
+    Inc(I);
+  end;
+
+  WSACleanup;
+end;
+
+function LocalIPs: string;
+type
+  TaPInAddr = array [0 .. 10] of PInAddr;
+  PaPInAddr = ^TaPInAddr;
+var
+  phe: PHostEnt;
+  pptr: PaPInAddr;
+  Buffer: Array [0 .. 63] of AnsiChar;
+  I: Integer;
+  GInitData: TWSAData;
+begin
+  Result := '';
+
+  WSAStartup($101, GInitData);
+
+  GetHostName(Buffer, SizeOf(Buffer));
+  phe := GetHostByName(Buffer);
+  if phe = nil then Exit;
+
+  pptr := PaPInAddr(phe^.h_addr_list);
+  I := 0;
+  while pptr^[I] <> nil do begin
+    Result := Result + String(inet_ntoa(pptr^[I]^)) + ';';
     Inc(I);
   end;
 
