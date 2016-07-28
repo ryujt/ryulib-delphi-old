@@ -4,7 +4,7 @@ interface
 
 uses
   RyuLibBase, SimpleThread, SuspensionQueue,
-  SysUtils, Classes, SyncObjs;
+  SysUtils, Classes;
 
 type
   TTaskEnvet<TTaskType, TDataType> = procedure (ATaskType:TTaskType; ADataType:TDataType) of object;
@@ -99,7 +99,11 @@ var
 begin
   while ASimpleThread.Terminated = false do begin
     Item := FSuspensionQueue.Pop;
-    if Assigned(FOnTask) then FOnTask(Item.FTaksType, Item.FDataType);
+    try
+      if Assigned(FOnTask) then FOnTask(Item.FTaksType, Item.FDataType);
+    finally
+      Item.Free;
+    end;
   end;
 end;
 
