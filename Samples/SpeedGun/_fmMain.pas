@@ -27,12 +27,12 @@ implementation
 procedure TfmMain.FormCreate(Sender: TObject);
 begin
   FSpeedGun := TSpeedGun.Create;
-  FSpeedGun.Start;
+  FSpeedGun.Start(5000);
 end;
 
 procedure TfmMain.TimerTimer(Sender: TObject);
 begin
-  FSpeedGun.IncSize(10);
+  FSpeedGun.IncSpeed(20);
   Caption := Format('Speed = %d', [FSpeedGun.Speed]);
 end;
 
