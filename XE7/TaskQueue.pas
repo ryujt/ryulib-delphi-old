@@ -3,7 +3,7 @@ unit TaskQueue;
 interface
 
 uses
-  RyuLibBase, SimpleThread, DynamicQueue, QueryPerformance,
+  DebugTools, RyuLibBase, SimpleThread, DynamicQueue, QueryPerformance,
   SysUtils, Classes;
 
 const
@@ -11,6 +11,7 @@ const
 
 type
   TTaskEnvet<TTaskType, TDataType> = procedure (ASender:Tobject; ATaskType:TTaskType; ADataType:TDataType) of object;
+  TTimerEvent = procedure (ASender:Tobject; ATick:integer) of object;
 
   TItem<TTaskType, TDataType> = class
   private
@@ -38,7 +39,7 @@ type
   private
     FOnTask: TTaskEnvet<TTaskType, TDataType>;
     FInterval: integer;
-    FOnTimer: TNotifyEvent;
+    FOnTimer: TTimerEvent;
     procedure SetInterval(const Value: integer);
   public
     constructor Create;
@@ -52,7 +53,7 @@ type
   public
     property Interval : integer read FInterval write SetInterval;
     property OnTask : TTaskEnvet<TTaskType, TDataType> read FOnTask write FOnTask;
-    property OnTimer : TNotifyEvent read FOnTimer write FOnTimer;
+    property OnTimer : TTimerEvent read FOnTimer write FOnTimer;
   end;
 
 implementation
@@ -124,17 +125,21 @@ end;
 
 procedure TTaskQueue<TTaskType, TDataType>.do_Timer;
 var
-  Tick : int64;
+  Tick, Term : int64;
 begin
   if FIsStarted = false then Exit;
 
   Tick := GetTick;
 
-  if (Tick < FOldTick) or ((Tick-FOldTick) > FInterval) then begin
-    if Assigned(FOnTimer) then FOnTimer(Self);
+  if Tick < FOldTick then begin
+    FOldTick := Tick;
+  end else begin
+    Term := Tick-FOldTick;
+    if Term >= FInterval then begin
+      FOldTick := Tick;
+      if Assigned(FOnTimer) then FOnTimer(Self, Term);
+    end;
   end;
-
-  FOldTick := Tick;
 end;
 
 procedure TTaskQueue<TTaskType, TDataType>.on_FSimpleThread_Execute(
