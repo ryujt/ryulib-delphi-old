@@ -9,14 +9,26 @@ uses
   Windows, Classes, SysUtils, Types;
 
 type
-  TPacket = class
+  TMemory = class
   private
+    FSize: integer;
+    FData: pointer;
+    FTag: pointer;
   public
-    Data : pointer;
-    Size : integer;
-    Tag : pointer;
+    constructor Create(ASize:integer); reintroduce; overload;
     constructor Create(AData:pointer; ASize:integer); reintroduce; overload;
     constructor Create(AData:pointer; ASize:integer; ATag:pointer); reintroduce; overload;
+    constructor Create(AText:string); reintroduce; overload;
+
+    destructor Destroy; override;
+
+    procedure Assign(AMemory:TMemory);
+
+    function ToString:string; override;
+  public
+    property Data : pointer read FData;
+    property Size : integer read FSize;
+    property Tag : pointer read FTag;
   end;
 
   TScreenSize = record
@@ -38,34 +50,12 @@ type
   TProcedureReference<T> = reference to procedure(Context:T);
 
   TBooleanResultEvent = function (Sender:TObject):boolean of object;
-  TPacketEvent = procedure (Sender:TObject; APacket:TPacket) of object;
+  TPacketEvent = procedure (Sender:TObject; APacket:TMemory) of object;
   TDataEvent = procedure (Sender:TObject; AData:pointer; ASize:integer) of object;
   TDataAndTagEvent = procedure (Sender:TObject; AData:pointer; ASize:integer; ATag:pointer) of object;
   TIntegerEvent = procedure (Sender:TObject; AValue:Integer) of object;
   TStringEvent = procedure (Sender:TObject; const AValue:string) of object;
   TMsgAndCodeEvent = procedure (Sender:TObject; const AMsg:string; ACode:integer) of object;
-
-  TMemory = class
-  private
-    FSize: integer;
-    FData: pointer;
-  public
-    Tag: DWord;
-
-    constructor Create(ASize:integer); reintroduce; overload;
-    constructor Create(AData:pointer; ASize:integer); reintroduce; overload;
-    constructor Create(AData:pointer; ASize:integer; ATag:DWord); reintroduce; overload;
-    constructor Create(AText:string); reintroduce; overload;
-
-    destructor Destroy; override;
-
-    procedure Assign(AMemory:TMemory);
-
-    function ToString:string; override;
-  public
-    property Data : pointer read FData;
-    property Size : integer read FSize;
-  end;
 
   TObjectClass = class of TObject;
 
@@ -113,34 +103,6 @@ begin
   end;
 end;
 
-{ TPacket }
-
-constructor TPacket.Create(AData: pointer; ASize: integer);
-begin
-  Size := ASize;
-  if Size <= 0 then begin
-    Data := nil;
-  end else begin
-    GetMem(Data, Size);
-    Move(AData^, Data^, Size);
-  end;
-
-  Tag := nil;
-end;
-
-constructor TPacket.Create(AData: pointer; ASize: integer; ATag: pointer);
-begin
-  Size := ASize;
-  if Size <= 0 then begin
-    Data := nil;
-  end else begin
-    GetMem(Data, Size);
-    Move(AData^, Data^, Size);
-  end;
-
-  Tag := ATag;
-end;
-
 { TScreenSize }
 
 procedure TScreenSize.SetValue(AWidth, AHeight: integer);
@@ -180,10 +142,10 @@ begin
     Move(AMemory.Data^, FData^, FSize);
   end;
 
-  Tag := AMemory.Tag;
+  FTag := AMemory.FTag;
 end;
 
-constructor TMemory.Create(AData: pointer; ASize: integer; ATag: DWord);
+constructor TMemory.Create(AData: pointer; ASize: integer; ATag: pointer);
 begin
   FSize := ASize;
   if FSize <= 0 then begin
@@ -193,7 +155,7 @@ begin
     Move(AData^, FData^, FSize);
   end;
 
-  Tag := ATag;
+  FTag := ATag;
 end;
 
 constructor TMemory.Create(AData: pointer; ASize: integer);
@@ -203,10 +165,10 @@ begin
     FData := nil;
   end else begin
     GetMem(FData, FSize);
-    Move(AData^, FData^, FSize);
+    if AData <> nil then Move(AData^, FData^, FSize);
   end;
 
-  Tag := 0;
+  FTag := nil;
 end;
 
 constructor TMemory.Create(ASize: integer);
@@ -218,7 +180,7 @@ begin
     GetMem(FData, FSize);
   end;
 
-  Tag := 0;
+  FTag := nil;
 end;
 
 destructor TMemory.Destroy;
@@ -240,7 +202,7 @@ constructor TMemory.Create(AText: string);
 begin
   TextToData( AText, FData, FSize );
 
-  Tag := 0;
+  FTag := nil;
 end;
 
 { TInterfaceBase }
