@@ -8,10 +8,9 @@ uses
   Windows, Messages, Classes, SysUtils;
 
 type
-  TAsyncTaskProcedure = reference to procedure;
-  TAsyncTaskCallbackProcedure = reference to procedure(AUserData:pointer);
+  TAsyncTaskProcedure = reference to procedure (AUserData:pointer);
 
-procedure AsyncTask(AProcedure:TAsyncTaskProcedure; ACallBack:TAsyncTaskCallbackProcedure; AUserData:pointer=nil);
+procedure AsyncTask(AProcedure,ACallBack:TAsyncTaskProcedure; AUserData:pointer=nil);
 
 implementation
 
@@ -20,7 +19,7 @@ type
   private
   public
     AsyncTaskProcedure : TAsyncTaskProcedure;
-    CallBack : TAsyncTaskCallbackProcedure;
+    CallBack : TAsyncTaskProcedure;
     UserData : pointer;
   end;
 
@@ -39,14 +38,14 @@ var
 begin
   Result := 0;
   try
-    AsyncTaskData.AsyncTaskProcedure();
+    AsyncTaskData.AsyncTaskProcedure(AsyncTaskData.UserData);
     PostMessage(AsyncTaskHandler.Handle, WM_USER, Integer(AsyncTaskData), 0);
   except
     on E : Exception do Trace('AsyncTasks.AsyncTask() - ' + E.Message);
   end;
 end;
 
-procedure AsyncTask(AProcedure:TAsyncTaskProcedure; ACallBack:TAsyncTaskCallbackProcedure; AUserData:pointer);
+procedure AsyncTask(AProcedure,ACallBack:TAsyncTaskProcedure; AUserData:pointer=nil);
 var
   AsyncTaskData : TAsyncTaskData;
 begin
