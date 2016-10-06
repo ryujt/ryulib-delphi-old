@@ -3,6 +3,8 @@ unit Sys;
 interface
 
 uses
+  IpTypes, IpHlpApi,
+  ComObj, ActiveX, ShlObj,
   Windows, SysUtils, Classes, Messages, Registry, WinSock, Tlhelp32;
 
 const
@@ -62,6 +64,9 @@ procedure HardwareAcceleration(level: integer);  // 0: 최대, 5: 없음
 
 procedure AddContextMenu(AMenuName,ATitle,ACommand:string);
 
+function MacAddress:string;
+function MacAddressList:string;
+
 function LocalIP: string;
 function LocalIPs: string;
 
@@ -76,9 +81,6 @@ var
   SystemInfo : TSystemInfo;
 
 implementation
-
-uses
-  ComObj, ActiveX, ShlObj;
 
 Function  DesktopSize:TSize;
 begin
@@ -574,6 +576,52 @@ begin
     '',
     ACommand
   );
+end;
+
+function MacAddress:string;
+var
+  OutBufLen: ULONG;
+  NumInterfaces: Cardinal;
+  AdapterInfo: array of TIpAdapterInfo;
+begin
+  Result := '';
+
+  GetNumberOfInterfaces(NumInterfaces);
+  SetLength(AdapterInfo, NumInterfaces);
+  OutBufLen := NumInterfaces * SizeOf(TIpAdapterInfo);
+  GetAdaptersInfo(@AdapterInfo[0], OutBufLen);
+
+  if NumInterfaces = 0 then Exit;
+
+  Result := Format('%.2x%.2x%.2x%.2x%.2x%.2x',
+    [ AdapterInfo[0].Address[0], AdapterInfo[0].Address[1],
+      AdapterInfo[0].Address[2], AdapterInfo[0].Address[3],
+      AdapterInfo[0].Address[4], AdapterInfo[0].Address[5]
+    ]
+  );
+end;
+
+function MacAddressList:string;
+var
+  OutBufLen: ULONG;
+  NumInterfaces: Cardinal;
+  AdapterInfo: array of TIpAdapterInfo;
+  Loop: Integer;
+begin
+  Result := '';
+
+  GetNumberOfInterfaces(NumInterfaces);
+  SetLength(AdapterInfo, NumInterfaces);
+  OutBufLen := NumInterfaces * SizeOf(TIpAdapterInfo);
+  GetAdaptersInfo(@AdapterInfo[0], OutBufLen);
+
+  for Loop := 0 to NumInterfaces-1 do
+    Result := Result + Format('%.2x%.2x%.2x%.2x%.2x%.2x',
+      [ AdapterInfo[Loop].Address[0], AdapterInfo[Loop].Address[1],
+        AdapterInfo[Loop].Address[2], AdapterInfo[Loop].Address[3],
+        AdapterInfo[Loop].Address[4], AdapterInfo[Loop].Address[5]
+      ]
+    ) + ';' ;
 end;
 
 function LocalIP: string;
