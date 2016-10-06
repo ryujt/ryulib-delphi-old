@@ -24,7 +24,7 @@ implementation
 procedure TfmMain.FormCreate(Sender: TObject);
 begin
   AsyncTask(
-    // This will execute task synchronously by new thread without blocking.
+    // This will execute task asynchronously by new thread without blocking.
     procedure
     begin
       Sleep(1000 * 3);
