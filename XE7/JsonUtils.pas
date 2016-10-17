@@ -29,7 +29,12 @@ type
     function StringToStringList(const AText:string; AList:TStringList):boolean;
   end;
 
-/// PHP JSON array to StringList
+(** PHP JSON array to StringList
+  This function will return JSON list to AList.
+  When you use json_encode() in PHP, it will return string like below.
+  "[{SJON #1}, {JSON #2} ....]"
+  This function will cut JSONs and put into StringList one by one.
+*)
 function phpArrayToStringList(const AText:string; AList:TStringList):boolean;
 
 implementation
@@ -132,7 +137,7 @@ end;
 function TphpArrayToStringList.StringToStringList(const AText: string;
   AList: TStringList): boolean;
 begin
-  // TODO: 에러 처리
+  // TODO: Error detect
   Result := true;
 
   FText := AText;
