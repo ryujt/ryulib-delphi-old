@@ -3,7 +3,7 @@ unit MouseEventControl;
 interface
 
 uses
-  Scheduler, HandleComponent,
+  SimpleThread, HandleComponent,
   Windows, Messages, SysUtils, Classes, Controls, SyncObjs;
 
 const
@@ -26,8 +26,8 @@ type
     procedure on_TargetControl_MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure on_TargetControl_MouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
-    FScheduler : TScheduler;
-    procedure on_FScheduler_Timer(Sender:TObject);
+    FSimpleThread : TSimpleThread;
+    procedure on_FSimpleThread_Execute(ASimpleThread:TSimpleThread);
   private
     FTargetControl: TWinControl;
     FOnMouseDown: TMouseEvent;
@@ -69,14 +69,14 @@ begin
 
   FCS := TCriticalSection.Create;
 
-  FScheduler := TScheduler.Create;
-  FScheduler.Interval := 5;
-  FScheduler.OnTimer := on_FScheduler_Timer;
+  FSimpleThread := TSimpleThread.Create('TMouseEventControl', on_FSimpleThread_Execute);
 end;
 
 destructor TMouseEventControl.Destroy;
 begin
-  FreeAndNil(FScheduler);
+  FSimpleThread.TerminateNow;
+
+  FreeAndNil(FSimpleThread);
   FreeAndNil(FCS);
 
   inherited;
@@ -94,42 +94,46 @@ begin
   end;
 end;
 
-procedure TMouseEventControl.on_FScheduler_Timer(Sender: TObject);
+procedure TMouseEventControl.on_FSimpleThread_Execute(
+  ASimpleThread: TSimpleThread);
 var
   CurPos, ClientPos : TPoint;
   MouseMoveInfo : TMouseMoveInfo;
 begin
-  GetCursorPos( CurPos );
+  while not ASimpleThread.Terminated do begin
+    ASimpleThread.Sleep(50);
 
-  if FTargetControl = nil then Exit;
+    if FTargetControl = nil then Continue;
 
-  if (CurPos.X = FOldX) and (CurPos.Y = FOldY) then Exit;
+    GetCursorPos( CurPos );
 
-  FOldX := CurPos.X;
-  FOldY := CurPos.Y;
+    if (CurPos.X = FOldX) and (CurPos.Y = FOldY) then Continue;
 
-  FCS.Acquire;
-  try
-    if not FTargetControl.Showing then Exit;
+    FOldX := CurPos.X;
+    FOldY := CurPos.Y;
 
+    FCS.Acquire;
     try
-      ClientPos := FTargetControl.ScreenToClient( CurPos );
-    except
-      Exit;
+      if not FTargetControl.Showing then Continue;
+
+      try
+        ClientPos := FTargetControl.ScreenToClient( CurPos );
+      except
+      end;
+
+      if (ClientPos.X < 0) or (ClientPos.Y < 0) then Continue;
+      if (ClientPos.X >= FTargetControl.Width) or (ClientPos.Y >= FTargetControl.Height) then Continue;
+
+      MouseMoveInfo := TMouseMoveInfo.Create;
+      MouseMoveInfo.Shift := FOldShift;
+      MouseMoveInfo.X := ClientPos.X;
+      MouseMoveInfo.Y := ClientPos.Y;
+    finally
+      FCS.Release;
     end;
 
-    if (ClientPos.X < 0) or (ClientPos.Y < 0) then Exit;
-    if (ClientPos.X >= FTargetControl.Width) or (ClientPos.Y >= FTargetControl.Height) then Exit;
-
-    MouseMoveInfo := TMouseMoveInfo.Create;
-    MouseMoveInfo.Shift := FOldShift;
-    MouseMoveInfo.X := ClientPos.X;
-    MouseMoveInfo.Y := ClientPos.Y;
-  finally
-    FCS.Release;
+    PostMessage( Handle, WM_CustomMouseMove, Integer(MouseMoveInfo), 0 );
   end;
-
-  PostMessage( Handle, WM_CustomMouseMove, Integer(MouseMoveInfo), 0 );
 end;
 
 procedure TMouseEventControl.on_TargetControl_MouseDown(Sender: TObject;
@@ -180,8 +184,6 @@ begin
     TWinControlWrapper(FTargetControl).OnMouseDown := on_TargetControl_MouseDown;
     TWinControlWrapper(FTargetControl).OnMouseMove := on_TargetControl_MouseMove;
     TWinControlWrapper(FTargetControl).OnMouseUp   := on_TargetControl_MouseUp;
-
-    FScheduler.Start;
   finally
     FCS.Release;
   end;

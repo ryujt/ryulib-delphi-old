@@ -16,7 +16,7 @@ type
   TItem<TTaskType, TDataType> = class
   private
     FTaksType : TTaskType;
-    FDataType : TDataType;
+    FData : TDataType;
   public
     constructor Create(ATaskType:TTaskType; ADataType:TDataType); reintroduce;
   end;
@@ -64,7 +64,7 @@ constructor TItem<TTaskType, TDataType>.Create(ATaskType: TTaskType;
   ADataType: TDataType);
 begin
   FTaksType := ATaskType;
-  FDataType := ADataType;
+  FData := ADataType;
 end;
 
 { TTaskQueue<TTaskType, TDataType> }
@@ -150,7 +150,7 @@ begin
   while ASimpleThread.Terminated = false do begin
     while FDynamicQueue.Pop( Pointer(Item) ) do begin
       try
-        if Assigned(FOnTask) then FOnTask(Self, Item.FTaksType, Item.FDataType);
+        if Assigned(FOnTask) then FOnTask(Self, Item.FTaksType, Item.FData);
       finally
         Item.Free;
       end;
