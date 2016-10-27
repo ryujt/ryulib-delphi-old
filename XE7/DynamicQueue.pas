@@ -9,34 +9,6 @@ type
   TSimpleIterateProcedure = reference to procedure(AItem:pointer);
   TIterateProcedure = reference to procedure(AItem:pointer; var ANeedStop:boolean);
 
-  {*
-    A Queue class that provides dynamic capacity.
-    It expands it's room for archiving items when if the Queue coomes to the full status.
-  }
-  TDynamicQueue = class
-  private
-    FQueue : TObject;
-    function GetCount:integer;
-    function GetIsEmpty: boolean;
-  public
-    constructor Create(ANeedThreadSafe:boolean); reintroduce;
-    destructor Destroy; override;
-
-    var Clear : procedure of object;
-    var Push : procedure (AItem:pointer) of object;
-    var Pop : function (var AItem:pointer):boolean of object;
-    var Peek : function :pointer of object;
-
-    var SimpleIterate : procedure (AProcedure:TSimpleIterateProcedure) of object;
-    var Iterate : procedure (AProcedure:TIterateProcedure) of object;
-
-    property Count : integer read GetCount;
-    property IsEmpty : boolean read GetIsEmpty;
-  end;
-
-implementation
-
-type
   PNode = ^TNode;
   TNode = record
     Next : PNode;
@@ -54,7 +26,9 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure Clear; virtual; abstract;
+    procedure Clear; overload; virtual; abstract;
+    procedure Clear(AProcedure:TSimpleIterateProcedure); overload; virtual; abstract;
+
     procedure Push(AItem:pointer); virtual; abstract;
     function Pop(var AItem:pointer):boolean; virtual; abstract;
     function Peek:pointer; virtual; abstract;
@@ -63,12 +37,44 @@ type
     procedure Iterate(AProcedure:TIterateProcedure); virtual; abstract;
   end;
 
+  {*
+    A Queue class that provides dynamic capacity.
+    It expands it's room for archiving items when if the Queue coomes to the full status.
+  }
+  TDynamicQueue = class
+  private
+    FQueue : TDynamicQueueBase;
+    function GetCount:integer;
+    function GetIsEmpty: boolean;
+  public
+    constructor Create(ANeedThreadSafe:boolean); reintroduce;
+    destructor Destroy; override;
+
+    procedure Clear; overload;
+    procedure Clear(AProcedure:TSimpleIterateProcedure); overload;
+
+    var Push : procedure (AItem:pointer) of object;
+    var Pop : function (var AItem:pointer):boolean of object;
+    var Peek : function :pointer of object;
+
+    var SimpleIterate : procedure (AProcedure:TSimpleIterateProcedure) of object;
+    var Iterate : procedure (AProcedure:TIterateProcedure) of object;
+
+    property Count : integer read GetCount;
+    property IsEmpty : boolean read GetIsEmpty;
+  end;
+
+implementation
+
+type
   TDynamicQueueForSingleThread = class (TDynamicQueueBase)
   private
     function GetCount: integer; override;
     function GetIsEmpty: boolean; override;
   public
-    procedure Clear; override;
+    procedure Clear; overload; override;
+    procedure Clear(AProcedure:TSimpleIterateProcedure); overload; override;
+
     procedure Push(AItem:pointer); override;
     function Pop(var AItem:pointer):boolean; override;
     function Peek:pointer; override;
@@ -81,7 +87,9 @@ type
     function GetCount: integer; override;
     function GetIsEmpty: boolean; override;
   public
-    procedure Clear; override;
+    procedure Clear; overload; override;
+    procedure Clear(AProcedure:TSimpleIterateProcedure); overload; override;
+
     procedure Push(AItem:pointer); override;
     function Pop(var AItem:pointer):boolean; override;
     function Peek:pointer; override;
@@ -116,6 +124,18 @@ var
   Item: pointer;
 begin
   while Pop(Item) do Dispose(Item);
+  FCount := 0;
+end;
+
+procedure TDynamicQueueForSingleThread.Clear(
+  AProcedure: TSimpleIterateProcedure);
+var
+  Item: pointer;
+begin
+  while Pop(Item) do begin
+    AProcedure(Item);
+    Dispose(Item);
+  end;
   FCount := 0;
 end;
 
@@ -210,7 +230,27 @@ begin
   FCS.Enter;
   try
     while FHead <> nil do begin
-      Dispose(FHead^.Data);
+      pHead := FHead;
+      FHead := FHead^.Next;
+
+      Dispose(pHead);
+    end;
+
+    FCount := 0;
+  finally
+    FCS.Leave;
+  end;
+end;
+
+procedure TDynamicQueueForMultiThread.Clear(
+  AProcedure: TSimpleIterateProcedure);
+var
+  pHead : PNode;
+begin
+  FCS.Enter;
+  try
+    while FHead <> nil do begin
+      AProcedure(FHead^.Data);
 
       pHead := FHead;
       FHead := FHead^.Next;
@@ -334,6 +374,16 @@ end;
 
 { TDynamicQueue }
 
+procedure TDynamicQueue.Clear;
+begin
+  FQueue.Clear;
+end;
+
+procedure TDynamicQueue.Clear(AProcedure: TSimpleIterateProcedure);
+begin
+  FQueue.Clear(AProcedure);
+end;
+
 constructor TDynamicQueue.Create(ANeedThreadSafe: boolean);
 begin
   inherited Create;
@@ -342,12 +392,12 @@ begin
   else FQueue := TDynamicQueueForSingleThread.Create;
 
   // For the best performance.
-  Clear := TDynamicQueueBase(FQueue).Clear;
-  Push := TDynamicQueueBase(FQueue).Push;
-  Pop := TDynamicQueueBase(FQueue).Pop;
-  Peek := TDynamicQueueBase(FQueue).Peek;
-  SimpleIterate := TDynamicQueueBase(FQueue).SimpleIterate;
-  Iterate := TDynamicQueueBase(FQueue).Iterate;
+  // "Call var Push" is little bit faster than "call FQueue.Push".
+  Push := FQueue.Push;
+  Pop := FQueue.Pop;
+  Peek := FQueue.Peek;
+  SimpleIterate := FQueue.SimpleIterate;
+  Iterate := FQueue.Iterate;
 end;
 
 destructor TDynamicQueue.Destroy;
@@ -361,12 +411,12 @@ end;
 
 function TDynamicQueue.GetCount: integer;
 begin
-  Result := TDynamicQueueBase(FQueue).GetCount;
+  Result := FQueue.GetCount;
 end;
 
 function TDynamicQueue.GetIsEmpty: boolean;
 begin
-  Result := TDynamicQueueBase(FQueue).GetIsEmpty;
+  Result := FQueue.GetIsEmpty;
 end;
 
 end.
