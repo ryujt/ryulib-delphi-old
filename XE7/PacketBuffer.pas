@@ -3,7 +3,7 @@ unit PacketBuffer;
 interface
 
 uses
-  DynamicQueue,
+  RyuLibBase, DynamicQueue,
   Classes, SysUtils, SyncObjs;
 
 type
@@ -40,82 +40,6 @@ type
   end;
 
 implementation
-
-type
-  TPacket = class
-  private
-    FSize: integer;
-    FData: pointer;
-    FTag: pointer;
-  public
-    constructor Create(ASize:integer); reintroduce; overload;
-    constructor Create(AData:pointer; ASize:integer); reintroduce; overload;
-    constructor Create(AData:pointer; ASize:integer; ATag:pointer); reintroduce; overload;
-
-    procedure Assign(AMemory:TPacket);
-  public
-    property Data : pointer read FData;
-    property Size : integer read FSize;
-    property Tag : pointer read FTag;
-  end;
-
-{ TPacket }
-
-procedure TPacket.Assign(AMemory: TPacket);
-begin
-  if FData <> nil then begin
-    FreeMem(FData);
-    FData := nil;
-  end;
-
-  FSize := AMemory.Size;
-  if FSize <= 0 then begin
-    FData := nil;
-  end else begin
-    GetMem(FData, FSize);
-    Move(AMemory.Data^, FData^, FSize);
-  end;
-
-  FTag := AMemory.FTag;
-end;
-
-constructor TPacket.Create(AData: pointer; ASize: integer; ATag: pointer);
-begin
-  FSize := ASize;
-  if FSize <= 0 then begin
-    FData := nil;
-  end else begin
-    GetMem(FData, FSize);
-    Move(AData^, FData^, FSize);
-  end;
-
-  FTag := ATag;
-end;
-
-constructor TPacket.Create(AData: pointer; ASize: integer);
-begin
-  FSize := ASize;
-  if FSize <= 0 then begin
-    FData := nil;
-  end else begin
-    GetMem(FData, FSize);
-    if AData <> nil then Move(AData^, FData^, FSize);
-  end;
-
-  FTag := nil;
-end;
-
-constructor TPacket.Create(ASize: integer);
-begin
-  FSize := ASize;
-  if FSize <= 0 then begin
-    FData := nil;
-  end else begin
-    GetMem(FData, FSize);
-  end;
-
-  FTag := nil;
-end;
 
 { TPacketBuffer }
 

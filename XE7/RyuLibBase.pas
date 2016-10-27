@@ -9,26 +9,31 @@ uses
   Windows, Classes, SysUtils, Types;
 
 type
-  TMemory = class
+  // 내부의 Data가 TMemory가 Destroy 될 때 환원되지 않는다.
+  TPacket = class
   private
-    FSize: integer;
-    FData: pointer;
-    FTag: pointer;
   public
+    Size: integer;
+    Data: pointer;
+    Tag: pointer;
+
     constructor Create(ASize:integer); reintroduce; overload;
     constructor Create(AData:pointer; ASize:integer); reintroduce; overload;
     constructor Create(AData:pointer; ASize:integer; ATag:pointer); reintroduce; overload;
     constructor Create(AText:string); reintroduce; overload;
 
+    procedure Assign(APacket:TPacket);
+
+    function ToString:string; override;
+  end;
+
+  // 내부의 Data가 TMemory가 Destroy 될 때 환원된다.
+  TMemory = class (TPacket)
+  private
+  public
     destructor Destroy; override;
 
     procedure Assign(AMemory:TMemory);
-
-    function ToString:string; override;
-  public
-    property Data : pointer read FData;
-    property Size : integer read FSize;
-    property Tag : pointer read FTag;
   end;
 
   TScreenSize = record
@@ -125,84 +130,91 @@ begin
   FErrorCode := AErrorCode;
 end;
 
+{ TPacket }
+
+procedure TPacket.Assign(APacket: TPacket);
+begin
+  if Data <> nil then begin
+    FreeMem(Data);
+    Data := nil;
+  end;
+
+  Size := APacket.Size;
+  if Size <= 0 then begin
+    Data := nil;
+  end else begin
+    GetMem(Data, Size);
+    Move(APacket.Data^, Data^, Size);
+  end;
+
+  Tag := APacket.Tag;
+end;
+
+constructor TPacket.Create(AData: pointer; ASize: integer; ATag: pointer);
+begin
+  Size := ASize;
+  if Size <= 0 then begin
+    Data := nil;
+  end else begin
+    GetMem(Data, Size);
+    Move(AData^, Data^, Size);
+  end;
+
+  Tag := ATag;
+end;
+
+constructor TPacket.Create(AData: pointer; ASize: integer);
+begin
+  Size := ASize;
+  if Size <= 0 then begin
+    Data := nil;
+  end else begin
+    GetMem(Data, Size);
+    if AData <> nil then Move(AData^, Data^, Size);
+  end;
+
+  Tag := nil;
+end;
+
+constructor TPacket.Create(ASize: integer);
+begin
+  Size := ASize;
+  if Size <= 0 then begin
+    Data := nil;
+  end else begin
+    GetMem(Data, Size);
+  end;
+
+  Tag := nil;
+end;
+
+function TPacket.ToString: string;
+begin
+  Result := DataToText( Data, Size );
+end;
+
+constructor TPacket.Create(AText: string);
+begin
+  TextToData( AText, Data, Size );
+
+  Tag := nil;
+end;
+
 { TMemory }
 
 procedure TMemory.Assign(AMemory: TMemory);
 begin
-  if FData <> nil then begin
-    FreeMem(FData);
-    FData := nil;
-  end;
-
-  FSize := AMemory.Size;
-  if FSize <= 0 then begin
-    FData := nil;
-  end else begin
-    GetMem(FData, FSize);
-    Move(AMemory.Data^, FData^, FSize);
-  end;
-
-  FTag := AMemory.FTag;
-end;
-
-constructor TMemory.Create(AData: pointer; ASize: integer; ATag: pointer);
-begin
-  FSize := ASize;
-  if FSize <= 0 then begin
-    FData := nil;
-  end else begin
-    GetMem(FData, FSize);
-    Move(AData^, FData^, FSize);
-  end;
-
-  FTag := ATag;
-end;
-
-constructor TMemory.Create(AData: pointer; ASize: integer);
-begin
-  FSize := ASize;
-  if FSize <= 0 then begin
-    FData := nil;
-  end else begin
-    GetMem(FData, FSize);
-    if AData <> nil then Move(AData^, FData^, FSize);
-  end;
-
-  FTag := nil;
-end;
-
-constructor TMemory.Create(ASize: integer);
-begin
-  FSize := ASize;
-  if FSize <= 0 then begin
-    FData := nil;
-  end else begin
-    GetMem(FData, FSize);
-  end;
-
-  FTag := nil;
+  inherited Assign(AMemory);
 end;
 
 destructor TMemory.Destroy;
 begin
-  if FData <> nil then begin
-    FreeMem(FData);
-    FData := nil;
+  if Data <> nil then begin
+    FreeMem(Data);
+    Data := nil;
   end;
 
   inherited;
-end;
-
-function TMemory.ToString: string;
-begin
-  Result := DataToText( FData, FSize );
-end;
-
-constructor TMemory.Create(AText: string);
-begin
-  TextToData( AText, FData, FSize );
-
-  FTag := nil;
 end;
 
 { TInterfaceBase }

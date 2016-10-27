@@ -30,7 +30,7 @@ type
   TTaskQueue<TTaskType, TDataType> = class
   private
     FIsStarted : boolean;
-    FDynamicQueue : TDynamicQueue;
+    FQueue : TDynamicQueue;
     FOldTick : int64;
     procedure do_Timer;
   private
@@ -51,6 +51,7 @@ type
     procedure Add(ATaskType:TTaskType; ADataType:TDataType);
   public
   public
+    property IsStarted : boolean read FIsStarted;
     property Interval : integer read FInterval write SetInterval;
     property OnTask : TTaskEnvet<TTaskType, TDataType> read FOnTask write FOnTask;
     property OnTimer : TTimerEvent read FOnTimer write FOnTimer;
@@ -72,7 +73,7 @@ end;
 procedure TTaskQueue<TTaskType, TDataType>.Add(ATaskType: TTaskType;
   ADataType: TDataType);
 begin
-  FDynamicQueue.Push( TItem<TTaskType,TDataType>.Create(ATaskType, ADataType) );
+  FQueue.Push( TItem<TTaskType,TDataType>.Create(ATaskType, ADataType) );
   FSimpleThread.WakeUp;
 end;
 
@@ -83,9 +84,8 @@ end;
 
 procedure TTaskQueue<TTaskType, TDataType>.Start;
 begin
-  FOldTick := GetTick;
   FIsStarted := true;
-
+  FOldTick := GetTick;
   FSimpleThread.WakeUp;
 end;
 
@@ -94,8 +94,6 @@ var
   Item : TItem<TTaskType,TDataType>;
 begin
   FIsStarted := false;
-
-  while FDynamicQueue.Pop( Pointer(Item) ) do Item.Free;
 end;
 
 constructor TTaskQueue<TTaskType, TDataType>.Create;
@@ -105,7 +103,7 @@ begin
   FIsStarted := false;
   FInterval := DEFAULT_INTERVAL;
 
-  FDynamicQueue := TDynamicQueue.Create(true);
+  FQueue := TDynamicQueue.Create(true);
 
   FSimpleThread := TSimpleThread.Create('TTaskQueue', on_FSimpleThread_Execute);
   FSimpleThread.FreeOnTerminate := false;
@@ -117,7 +115,7 @@ begin
 
   FSimpleThread.TerminateNow;
 
-  FreeAndNil(FDynamicQueue);
+  FreeAndNil(FQueue);
   FreeAndNil(FSimpleThread);
 
   inherited;
@@ -148,7 +146,7 @@ var
   Item : TItem<TTaskType,TDataType>;
 begin
   while ASimpleThread.Terminated = false do begin
-    while FDynamicQueue.Pop( Pointer(Item) ) do begin
+    while FQueue.Pop( Pointer(Item) ) do begin
       try
         if Assigned(FOnTask) then FOnTask(Self, Item.FTaksType, Item.FData);
       finally
