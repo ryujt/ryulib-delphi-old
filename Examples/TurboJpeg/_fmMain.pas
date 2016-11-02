@@ -3,12 +3,13 @@ unit _fmMain;
 interface
 
 uses
-  DeskCamUtils, TurboJpeg,
+  TurboJpeg,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, StdCtrls, jpeg;
 
 const
-  QUALITY = 40;
+  QUALITY = 70;
+  _JpegHeaderSize = 16 * 41 + 3;
 
 type
   TfmMain = class(TForm)
@@ -19,7 +20,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
   private
-    FTurboJpeg : TTurboJpeg;
+    FBuffer : pointer;
   public
   end;
 
@@ -31,15 +32,18 @@ implementation
 uses
   Disk;
 
+var
+  pEncoder : pointer;
+  pDecoder : pointer;
+
 {$R *.dfm}
 
 procedure TfmMain.Button1Click(Sender: TObject);
 var
+  jpeg_size : integer;
+
   sLine : string;
   iLineCount : integer;
-
-  DataJpeg : pointer;
-  SizeJpeg : integer;
 
   Loop: Integer;
   pIndex : PByte;
@@ -49,13 +53,11 @@ var
   BitmapOut : TBitmap;
 begin
   with Image1.Picture do begin
-    TTurboJpeg.GetBuffer( DataJpeg, Bitmap.Width * Bitmap.Height * 4 );
-
-    BitmapToJpegCopy(Bitmap.ScanLine[Bitmap.Height-1], Bitmap.Width, Bitmap.Height, DataJpeg, SizeJpeg, QUALITY);
+    BitmapToJpeg24(pEncoder, Bitmap.ScanLine[Bitmap.Height-1], Bitmap.Width, Bitmap.Height, FBuffer, jpeg_size, QUALITY);
 
     fsData := TFileStream.Create(GetExecPath + 'a.jpg', fmCreate);
     try
-      fsData.Write(DataJpeg^, SizeJpeg);
+      fsData.Write(FBuffer^, jpeg_size);
     finally
       fsData.Free;
     end;
@@ -63,11 +65,11 @@ begin
     // Jpeg --> BMP Test
     BitmapOut := TBitmap.Create;
     try
-      BitmapOut.PixelFormat := pf32bit;
+      BitmapOut.PixelFormat := pf24bit;
       BitmapOut.Width       := Bitmap.Width;
       BitmapOut.Height      := Bitmap.Height;
 
-      JpegToBitmap(DataJpeg, SizeJpeg, BitmapOut.ScanLine[BitmapOut.Height-1], BitmapOut.Width, BitmapOut.Height);
+      JpegToBitmap24(pDecoder, FBuffer, jpeg_size, BitmapOut.ScanLine[BitmapOut.Height-1], BitmapOut.Width, BitmapOut.Height);
 
       BitmapOut.SaveToFile('./a.bmp');
     finally
@@ -76,7 +78,7 @@ begin
   end;
 
   // 헤더 만들기
-  pIndex := DataJpeg;
+  pIndex := FBuffer;
   sLine := '';
   iLineCount := 0;
   for Loop := 0 to _JpegHeaderSize-1 do begin
@@ -92,11 +94,11 @@ begin
   moMsg.Text := sLine;
 
   with Image2.Picture do begin
-    BitmapToJpegCopy(Bitmap.ScanLine[Bitmap.Height-1], Bitmap.Width, Bitmap.Height, DataJpeg, SizeJpeg, QUALITY);
+    BitmapToJpeg24(pEncoder, Bitmap.ScanLine[Bitmap.Height-1], Bitmap.Width, Bitmap.Height, FBuffer, jpeg_size, QUALITY);
 
     fsData := TFileStream.Create(GetExecPath + 'b.jpg', fmCreate);
     try
-      fsData.Write(DataJpeg^, SizeJpeg);
+      fsData.Write(FBuffer^, jpeg_size);
     finally
       fsData.Free;
     end;
@@ -108,15 +110,18 @@ var
   X: Integer;
   Y: Integer;
 begin
-  FTurboJpeg := TTurboJpeg.Create;
+  GetMem(FBuffer, 32 * 32 * 3);
 
-  Image1.Picture.Bitmap.PixelFormat := pf32bit;
+  pEncoder := CreateEncoderHandle;
+  pDecoder := CreateDecoderHandle;
+
+  Image1.Picture.Bitmap.PixelFormat := pf24bit;
   Image1.Picture.Bitmap.Canvas.Brush.Color := clBlack;
   Image1.Picture.Bitmap.Width := 32;
   Image1.Picture.Bitmap.Height := 32;
 
 
-  Image2.Picture.Bitmap.PixelFormat := pf32bit;
+  Image2.Picture.Bitmap.PixelFormat := pf24bit;
   Image2.Picture.Bitmap.Canvas.Brush.Color := clRed;
   Image2.Picture.Bitmap.Width := 32;
   Image2.Picture.Bitmap.Height := 32;

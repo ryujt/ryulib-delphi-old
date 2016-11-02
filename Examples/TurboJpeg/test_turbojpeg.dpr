@@ -1,4 +1,4 @@
-program Sample;
+program test_turbojpeg;
 
 uses
   Forms,
