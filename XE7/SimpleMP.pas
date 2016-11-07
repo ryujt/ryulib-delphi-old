@@ -153,9 +153,8 @@ begin
   Lock := TCountLock.Create;
   try
     for Loop := 0 to AThreadCount-1 do begin
-      QueueWorkItem( ThreadFunction_Single, TThreadSingleInfo.Create(Loop, AThreadCount, Lock, AContext, ASimpleProcedure) );
-
       Lock.Inc;
+      QueueWorkItem( ThreadFunction_Single, TThreadSingleInfo.Create(Loop, AThreadCount, Lock, AContext, ASimpleProcedure) );
     end;
 
     Lock.WaitFor;
@@ -205,9 +204,9 @@ begin
 
       if Loop = (AThreadCount-1) then iTaskCount := ATaskCount;
 
-      QueueWorkItem( ThreadFunction_Repeat, TThreadRepeatInfo.Create(Loop, Lock, AContext, iIndex, iTaskCount, ASimpleProcedure) );
-
       Lock.Inc;
+
+      QueueWorkItem( ThreadFunction_Repeat, TThreadRepeatInfo.Create(Loop, Lock, AContext, iIndex, iTaskCount, ASimpleProcedure) );
 
       iIndex := iIndex + iTaskCount;
 
