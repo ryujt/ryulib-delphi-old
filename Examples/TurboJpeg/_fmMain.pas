@@ -8,8 +8,8 @@ uses
   Dialogs, ExtCtrls, StdCtrls, jpeg;
 
 const
-  QUALITY = 70;
-  _JpegHeaderSize = 16 * 41 + 3;
+  QUALITY = 80;
+  _JpegHeaderSize = 16 * 39 -1;
 
 type
   TfmMain = class(TForm)

@@ -5,13 +5,13 @@ interface
 uses
   Windows, Classes, SysUtils;
 
-function CompressSlow(ADataIn:pointer; ASizeIn:DWord; ADataOut:pointer; var ASizeOut:DWord):integer;
-function CompressDefault(ADataIn:pointer; ASizeIn:DWord; ADataOut:pointer; var ASizeOut:DWord):integer;
-function CompressFast(ADataIn:pointer; ASizeIn:DWord; ADataOut:pointer; var ASizeOut:DWord):integer;
+function CompressSlow(ADataIn:pointer; ASizeIn:integer; ADataOut:pointer; var ASizeOut:integer):integer;
+function CompressDefault(ADataIn:pointer; ASizeIn:integer; ADataOut:pointer; var ASizeOut:integer):integer;
+function CompressFast(ADataIn:pointer; ASizeIn:integer; ADataOut:pointer; var ASizeOut:integer):integer;
 
-function SourceSize(AData:pointer):DWORD;
+function SourceSize(AData:pointer):integer;
 
-function Uncompress(ADataIn:pointer; ASizeIn:DWord; ADataOut:pointer; var ASizeOut:DWord):integer;
+function Uncompress(ADataIn:pointer; ASizeIn:integer; ADataOut:pointer; var ASizeOut:integer):integer;
 
 //function LzmaCompress(dest: PByte; destLen: PDWORD; const src: PByte; srcLen: DWORD;
 //  outProps: PByte; outPropsSize: PDWORD; level: Integer; dictSize: DWORD;
@@ -114,22 +114,22 @@ begin
   end;
 end;
 
-function CompressSlow(ADataIn:pointer; ASizeIn:DWord; ADataOut:pointer; var ASizeOut:DWord):integer;
+function CompressSlow(ADataIn:pointer; ASizeIn:integer; ADataOut:pointer; var ASizeOut:integer):integer;
 begin
   Result := Compress(SPEED_SLOW, ADataIn, ASizeIn, ADataOut, @ASizeOut);
 end;
 
-function CompressDefault(ADataIn:pointer; ASizeIn:DWord; ADataOut:pointer; var ASizeOut:DWord):integer;
+function CompressDefault(ADataIn:pointer; ASizeIn:integer; ADataOut:pointer; var ASizeOut:integer):integer;
 begin
   Result := Compress(SPEED_DEFAULT, ADataIn, ASizeIn, ADataOut, @ASizeOut);
 end;
 
-function CompressFast(ADataIn:pointer; ASizeIn:DWord; ADataOut:pointer; var ASizeOut:DWord):integer;
+function CompressFast(ADataIn:pointer; ASizeIn:integer; ADataOut:pointer; var ASizeOut:integer):integer;
 begin
   Result := Compress(SPEED_FAST, ADataIn, ASizeIn, ADataOut, @ASizeOut);
 end;
 
-function SourceSize(AData:pointer):DWORD;
+function SourceSize(AData:pointer):integer;
 var
   pSizeIn : PDWORD;
 begin
@@ -143,7 +143,7 @@ begin
   end;
 end;
 
-function Uncompress(ADataIn:pointer; ASizeIn:DWord; ADataOut:pointer; var ASizeOut:DWord):integer;
+function Uncompress(ADataIn:pointer; ASizeIn:integer; ADataOut:pointer; var ASizeOut:integer):integer;
 const
   LZMA_PROPS_SIZE = 5;
 var

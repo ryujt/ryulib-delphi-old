@@ -20,7 +20,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure btTestLZMAClick(Sender: TObject);
   private
-    FSizeOutLZMA : DWord;
+    FSizeOutLZMA : integer;
     FBufferSrc, FBufferZip, FBufferUnZip : pointer;
     FScreenCapture : TScreenCapture;
   public
@@ -54,7 +54,7 @@ end;
 procedure TfmMain.btLZMAClick(Sender: TObject);
 var
   Tick : Cardinal;
-  iResult, iSizeIn : DWord;
+  iResult, iSizeIn : integer;
   Loop: Integer;
 begin
   iSizeIn  := DATA_SOURCE_SIZE;
@@ -73,7 +73,7 @@ end;
 procedure TfmMain.btTestLZMAClick(Sender: TObject);
 var
   Tick : Cardinal;
-  iResult, iSizeOut : DWord;
+  iResult, iSizeOut : integer;
 begin
   Tick := GetTickCount;
 
