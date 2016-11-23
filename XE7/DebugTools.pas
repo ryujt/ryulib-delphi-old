@@ -5,7 +5,9 @@ interface
 uses
   Windows, Classes, SysUtils;
 
-procedure Trace(const AMsg:string);
+procedure Trace(const AMsg:string); overload;
+procedure Trace(AMsg:integer); overload;
+
 function TraceCount:integer;
 
 implementation
@@ -19,6 +21,11 @@ var
 procedure Trace(const AMsg:string);
 begin
   Queue.Push('[Ryu] ' + AMsg);
+end;
+
+procedure Trace(AMsg:integer);
+begin
+  Queue.Push('[Ryu] ' + IntToStr(AMsg));
 end;
 
 function TraceCount:integer;
