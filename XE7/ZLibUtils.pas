@@ -3,15 +3,15 @@ unit ZLibUtils;
 interface
 
 uses
-  SysUtils, Classes, FastZLib;
+  SysUtils, Classes, ZLIBEX;
 
 const
   BufferSize = 1024 * 16;
 
 procedure ShrinkData(DataIn:pointer; SizeIn:integer;
-          var DataOut:pointer; var SizeOut:integer; Speed:TCompressionLevel);
+          var DataOut:pointer; var SizeOut:integer; Speed:TZCompressionLevel);
 procedure ShrinkDataToBuffer(DataIn:pointer; SizeIn:integer;
-          DataOut:pointer; var SizeOut:integer; Speed:TCompressionLevel);
+          DataOut:pointer; var SizeOut:integer; Speed:TZCompressionLevel);
 
 procedure ShrinkDataSlow(DataIn:pointer; SizeIn:integer;
           var DataOut:pointer; var SizeOut:integer);
@@ -28,7 +28,7 @@ procedure ExpandData(DataIn:pointer; SizeIn:integer; var DataOut:pointer;
 procedure ExpandDataToBuffer(DataIn:pointer; SizeIn:integer; DataOut:pointer;
           var SizeOut:integer);
 
-procedure ShrinkStream(StreamSrc,StreamDst:TStream; Speed:TCompressionLevel);
+procedure ShrinkStream(StreamSrc,StreamDst:TStream; Speed:TZCompressionLevel);
 procedure ShrinkStreamSlow(StreamSrc,StreamDst:TStream);
 procedure ShrinkStreamNormal(StreamSrc,StreamDst:TStream);
 procedure ShrinkStreamFast(StreamSrc,StreamDst:TStream);
@@ -43,7 +43,7 @@ procedure ExpandFile(ASrc,ADst:string);
 implementation
 
 procedure ShrinkData(DataIn:pointer; SizeIn:integer;
-          var DataOut:pointer; var SizeOut:integer; Speed:TCompressionLevel);
+          var DataOut:pointer; var SizeOut:integer; Speed:TZCompressionLevel);
 var
   StreamIn, StreamOut : TMemoryStream;
 begin
@@ -70,7 +70,7 @@ begin
 end;
 
 procedure ShrinkDataToBuffer(DataIn:pointer; SizeIn:integer;
-          DataOut:pointer; var SizeOut:integer; Speed:TCompressionLevel);
+          DataOut:pointer; var SizeOut:integer; Speed:TZCompressionLevel);
 var
   StreamIn, StreamOut : TMemoryStream;
 begin
@@ -93,25 +93,25 @@ end;
 procedure ShrinkDataSlow(DataIn:pointer; SizeIn:integer;
           var DataOut:pointer; var SizeOut:integer);
 begin
-  ShrinkData(DataIn, SizeIn, DataOut, SizeOut, clMax);
+  ShrinkData(DataIn, SizeIn, DataOut, SizeOut, zcMax);
 end;
 
 procedure ShrinkDataToBufferSlow(DataIn:pointer; SizeIn:integer;
           DataOut:pointer; var SizeOut:integer);
 begin
-  ShrinkDataToBuffer(DataIn, SizeIn, DataOut, SizeOut, clMax);
+  ShrinkDataToBuffer(DataIn, SizeIn, DataOut, SizeOut, zcMax);
 end;
 
 procedure ShrinkDataToBufferFast(DataIn:pointer; SizeIn:integer;
           DataOut:pointer; var SizeOut:integer);
 begin
-  ShrinkDataToBuffer(DataIn, SizeIn, DataOut, SizeOut, clDefault);
+  ShrinkDataToBuffer(DataIn, SizeIn, DataOut, SizeOut, zcDefault);
 end;
 
 procedure ShrinkDataFast(DataIn:pointer; SizeIn:integer;
           var DataOut:pointer; var SizeOut:integer);
 begin
-  ShrinkData(DataIn, SizeIn, DataOut, SizeOut, clFastest);
+  ShrinkData(DataIn, SizeIn, DataOut, SizeOut, zcFastest);
 end;
 
 procedure ExpandData(DataIn:pointer; SizeIn:integer; var DataOut:pointer;
@@ -158,11 +158,11 @@ begin
   end;
 end;
 
-procedure ShrinkStream(StreamSrc,StreamDst:TStream; Speed:TCompressionLevel);
+procedure ShrinkStream(StreamSrc,StreamDst:TStream; Speed:TZCompressionLevel);
 var
-  ZStream : TCompressionStream;
+  ZStream : TZCompressionStream;
 begin
-  ZStream:= TCompressionStream.Create(Speed, StreamDst);
+  ZStream:= TZCompressionStream.Create(StreamDst, Speed);
   try
     ZStream.CopyFrom(StreamSrc, StreamSrc.Size);
   finally
@@ -173,26 +173,26 @@ end;
 
 procedure ShrinkStreamSlow(StreamSrc,StreamDst:TStream);
 begin
-  ShrinkStream(StreamSrc, StreamDst, clMax);
+  ShrinkStream(StreamSrc, StreamDst, zcMax);
 end;
 
 procedure ShrinkStreamNormal(StreamSrc,StreamDst:TStream);
 begin
-  ShrinkStream(StreamSrc, StreamDst, clDefault);
+  ShrinkStream(StreamSrc, StreamDst, zcDefault);
 end;
 
 procedure ShrinkStreamFast(StreamSrc,StreamDst:TStream);
 begin
-  ShrinkStream(StreamSrc, StreamDst, clFastest);
+  ShrinkStream(StreamSrc, StreamDst, zcFastest);
 end;
 
 procedure ExpandStream(StreamSrc,StreamDst:TStream);
 var
   iSize : Integer;
-  ZStream : TDecompressionStream;
+  ZStream : TZDecompressionStream;
   Buffer : Packed Array [0..BufferSize-1] of Byte;
 begin
-  ZStream:= TDecompressionStream.Create(StreamSrc);
+  ZStream:= TZDecompressionStream.Create(StreamSrc);
   try
     iSize:= ZStream.Read(Buffer, BufferSize);
     while iSize > 0 do begin
