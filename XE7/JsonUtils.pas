@@ -3,6 +3,8 @@ unit JsonUtils;
 interface
 
 uses
+  DebugTools,
+  JsonData, IdHttp,
   Classes, SysUtils;
 
 type
@@ -37,6 +39,9 @@ type
 *)
 function phpArrayToStringList(const AText:string; AList:TStringList):boolean;
 
+/// Get JSON data from AURL
+function GetJsonFromHTTP(const AURL:string):TJsonData;
+
 implementation
 
 function phpArrayToStringList(const AText:string; AList:TStringList):boolean;
@@ -48,6 +53,24 @@ begin
     Result := ToStringList.StringToStringList(AText, AList);
   finally
     ToStringList.Free;
+  end;
+end;
+
+function GetJsonFromHTTP(const AURL:string):TJsonData;
+var
+  http : TIdHTTP;
+begin
+  Result := TJsonData.Create;
+
+  http := TIdHTTP.Create(nil);
+  try
+    Result.Text := http.Get(AURL);
+
+    {$IFDEF DEBUG}
+    Trace( Format('JsonUtils.GetJsonFromHTTP - %s', [Result.Text]) );
+    {$ENDIF}
+  finally
+    http.Free;
   end;
 end;
 
