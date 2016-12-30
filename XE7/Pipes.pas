@@ -21,7 +21,7 @@ type
     FSecurityDescriptor : TSecurityDescriptor;
   private
     FSimpleThread : TSimpleThread;
-    procedure on_Execute(Sender:TObject);
+    procedure on_Execute(ASimpleThread:TSimpleThread);
   private
     FPipeName: string;
     FOnReceiveText: TReceiveTextEvent;
@@ -77,7 +77,7 @@ begin
   if (FHandle = 0) or (FHandle = INVALID_HANDLE_VALUE) then begin
     raise Exception.Create('TPipeReceiver.Create: CreateNamedPipe failed.');
   end else begin
-    FSimpleThread := TSimpleThread.Create(on_Execute);
+    FSimpleThread := TSimpleThread.Create('TPipeReceiver', on_Execute);
   end;
 end;
 
@@ -90,12 +90,12 @@ begin
   inherited;
 end;
 
-procedure TPipeReceiver.on_Execute(Sender: TObject);
+procedure TPipeReceiver.on_Execute(ASimpleThread: TSimpleThread);
 var
   ReadBytes : DWord;
   ssData : TStringStream;
 begin
-  while (not FSimpleThread.Terminated) and (FHandle <> 0) do begin
+  while (not ASimpleThread.Terminated) and (FHandle <> 0) do begin
     if not ConnectNamedPipe(FHandle, nil) then begin
       Sleep(1);
       Continue;
