@@ -4,7 +4,7 @@ interface
 
 uses
   Disk, IdComponent, IdHTTP,
-  Windows, SysUtils, Classes;
+  Windows, SysUtils, Classes, Wininet;
 
 type
   TDownloadingEvent = procedure (Sender:TObject; AFileSize,ACurrent:integer) of object;
@@ -24,7 +24,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure Download(AURL,AFileName:string);
+    procedure Download(const AURL,AFileName:string);
     procedure Stop;
   published
     property CurrentSize : integer read FCurrentSize;
@@ -34,7 +34,46 @@ type
     property OnDownloadEnd : TNotifyEvent read FOnDownloadEnd write FOnDownloadEnd;
   end;
 
+function DownloadFromURL(const AURL,ADst:string):boolean;
+
 implementation
+
+function DownloadFromURL(const AURL,ADst:string):boolean;
+var
+  hSession: HINTERNET;
+  hService: HINTERNET;
+  Buffer: array[0..4096] of Char;
+  dwBytesRead: DWORD;
+  fsData : TFileStream;
+begin
+  Result := False;
+
+  hSession := InternetOpen('Delphi', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  if not Assigned(hSession) then Exit;
+
+  try
+    hService := InternetOpenUrl(hSession, PChar(aUrl), nil, 0, INTERNET_FLAG_RELOAD, 0);
+    if not Assigned(hService) then Exit;
+
+    fsData := TFileStream.Create(ADst, fmCreate);
+    try
+      while True do begin
+        dwBytesRead := 4096;
+        InternetReadFile(hService, @Buffer, 4096, dwBytesRead);
+        if dwBytesRead = 0 then break;
+
+        fsData.Write(Buffer, dwBytesRead);
+      end;
+
+      Result := True;
+    finally
+      InternetCloseHandle(hService);
+      fsData.Free;
+    end;
+  finally
+    InternetCloseHandle(hSession);
+  end;
+end;
 
 { TWebFile }
 
@@ -54,7 +93,7 @@ begin
   inherited;
 end;
 
-procedure TWebFile.Download(AURL,AFileName: string);
+procedure TWebFile.Download(const AURL,AFileName: string);
 var
   fsDst : TFileStream;
   Expires : TDateTime;
