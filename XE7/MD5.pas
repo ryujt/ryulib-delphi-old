@@ -3,7 +3,7 @@ unit MD5;
 interface
 
 uses
-  Wcrypt2,
+  Wcrypt2, IdHashMessageDigest, idHash,
   Classes, SysUtils;
 
 type
@@ -13,11 +13,31 @@ type
 var
   IsWorking : boolean = false;
 
+function FileToMD5(const AFileName:string):string;
 procedure GetMD5(var AMD5:TMD5; AData:pointer; ASize:integer);
 function GetMD5String(AData:pointer; ASize:integer): string; overload;
-function GetMD5String(AText:string): string; overload;
+function GetMD5String(const AText:string): string; overload;
 
 implementation
+
+function FileToMD5(const AFileName:string):string;
+var
+  IdMD5: TIdHashMessageDigest5;
+  FS: TFileStream;
+begin
+  try
+    IdMD5 := TIdHashMessageDigest5.Create;
+    FS := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+    try
+       Result := IdMD5.HashStreamAsHex(FS)
+    finally
+      FS.Free;
+      IdMD5.Free;
+    end;
+  except
+    Result := '';
+  end;
+end;
 
 var
   hCryptProvider: HCRYPTPROV;
@@ -64,7 +84,7 @@ begin
   end;
 end;
 
-function GetMD5String(AText:string): string;
+function GetMD5String(const AText:string): string;
 var
   ssData : TStringStream;
 begin
