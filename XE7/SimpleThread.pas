@@ -233,10 +233,10 @@ end;
 
 procedure TSimpleThread.TerminateNow;
 begin
-  TerminateThread( FHandle, 0 );
-
+  FFreeOnTerminate := false;
   FTerminated := true;
-  FIsRunning := false;
+
+  TerminateThread( FHandle, 0 );
 
   if FIsRunning and Assigned(FOnTerminated) then FOnTerminated(Self);
 end;

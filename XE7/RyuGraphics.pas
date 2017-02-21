@@ -1169,8 +1169,8 @@ end;
 
 procedure TRyuJpegImage.SaveToBitmap(Bitmap: TBitmap);
 begin
-  Bitmap.Width:=  Width;
-  Bitmap.Height:= Height;
+  Bitmap.Width  :=  Width;
+  Bitmap.Height := Height;
   Bitmap.Canvas.Draw(0, 0, Self);
 end;
 
