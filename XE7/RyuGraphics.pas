@@ -150,7 +150,9 @@ begin
   try
     img.LoadFromFile( AFileName);
 
-    PngToBitmap( img, ABitmap );
+    ABitmap.Width  := img.Width;
+    ABitmap.Height := img.Height;
+    ABitmap.Canvas.Draw(0, 0, img);
   finally
     img.Free;
   end;
