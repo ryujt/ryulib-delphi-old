@@ -11,6 +11,8 @@ type
   private
     FCapacity : integer;
     FSpeed : integer;
+    FTime : integer;
+    FOldTick : int64;
     FDynamicQueue : TDynamicQueue;
     procedure do_Clear;
     procedure do_RemoveOldData;
@@ -31,16 +33,16 @@ implementation
 
 type
   TSpeedInfo = class
-    Tick : int64;
+    Time : integer;
     Speed : integer;
-    constructor Create(ATick:int64; ASpeed:integer); reintroduce;
+    constructor Create(ATime:integer; ASpeed:integer); reintroduce;
   end;
 
 { TSpeedInfo }
 
-constructor TSpeedInfo.Create(ATick: int64; ASpeed: integer);
+constructor TSpeedInfo.Create(ATime: integer; ASpeed: integer);
 begin
-  Tick := ATick;
+  Time := ATime;
   Speed := ASpeed;
 end;
 
@@ -50,7 +52,9 @@ constructor TSpeedGun.Create;
 begin
   inherited;
 
+  FTime  := 0;
   FSpeed := 0;
+  FOldTick := 0;
 
   FDynamicQueue := TDynamicQueue.Create(true);
 end;
@@ -75,45 +79,58 @@ end;
 
 procedure TSpeedGun.do_RemoveOldData;
 var
-  Tick : int64;
   SpeedInfo : TSpeedInfo;
 begin
-  Tick := GetTick;
+  while FTime > FCapacity do begin
+    if not FDynamicQueue.Pop( Pointer(SpeedInfo) ) then Break;
 
-  while true do begin
-    SpeedInfo := Pointer( FDynamicQueue.Peek );
-    if SpeedInfo = nil then Break;
-
-    if SpeedInfo.Tick > Tick then Break;
-    if (Tick-SpeedInfo.Tick) <= FCapacity then Break;
-
-    if FDynamicQueue.Pop( Pointer(SpeedInfo) ) then begin
-      try
-        FSpeed := FSpeed - SpeedInfo.Speed;
-      finally
-        SpeedInfo.Free;
-      end;
+    try
+      FTime  := FTime  - SpeedInfo.Time;
+      FSpeed := FSpeed - SpeedInfo.Speed;
+    finally
+      SpeedInfo.Free;
     end;
   end;
 end;
 
 function TSpeedGun.GetSpeed: integer;
 begin
+  if FTime > 1000 then Result := FSpeed div (FTime div 1000)
+  else Result := 0;
+
   do_RemoveOldData;
-  Result := FSpeed;
 end;
 
 procedure TSpeedGun.IncSpeed(ASpeed: integer);
+var
+  Tick : int64;
+  Time : integer;
 begin
+  Tick := GetTick;
+  Time := Tick - FOldTick;
+
+  if Time < 0 then begin
+    FOldTick := Tick;
+    Exit;
+  end;
+
+  FTime  := FTime  + Time;
   FSpeed := FSpeed + ASpeed;
-  FDynamicQueue.Push( TSpeedInfo.Create(GetTick, ASpeed) );
+
+  FOldTick := Tick;
+
+  FDynamicQueue.Push( TSpeedInfo.Create(Time, ASpeed) );
 end;
 
 procedure TSpeedGun.Start(ACapacity: integer);
 begin
-  FCapacity := ACapacity;
-  FSpeed := 0;
   do_Clear;
+
+  FCapacity := ACapacity;
+
+  FTime  := 0;
+  FSpeed := 0;
+  FOldTick := GetTick;
 end;
 
 end.
