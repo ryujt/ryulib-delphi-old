@@ -158,6 +158,7 @@ begin
     try
       ASize := Packet.Size;
       AData := Packet.Data;
+      ATag := Packet.Tag;
 
       Result := true;
     finally
@@ -166,8 +167,6 @@ begin
 
     FCount := FCount - 1;
     if ASize > 0 then FSize := FSize - ASize;
-
-    ATag := Packet.Tag;
   finally
     FCS.Leave;
   end;
