@@ -63,6 +63,8 @@ procedure CreateMemoryPool(APoolSize:int64);
 function GetMemory(ASize:integer):pointer; overload;
 procedure GetMemory(var AData:pointer; ASize:integer); overload;
 
+function CopyMemory(AData:pointer; ASize:integer):pointer;
+
 implementation
 
 var
@@ -81,14 +83,18 @@ end;
 
 function GetMemory(ASize:integer):pointer; overload;
 begin
-  if MemoryPoolObject = nil then raise Exception.Create('MemoryPool.pas - MemoryPoolObject = nil');
   Result := MemoryPoolObject.GetMem(ASize);
 end;
 
 procedure GetMemory(var AData:pointer; ASize:integer); overload;
 begin
-  if MemoryPoolObject = nil then raise Exception.Create('MemoryPool.pas - MemoryPoolObject = nil');
   MemoryPoolObject.GetMem(AData, ASize);
+end;
+
+function CopyMemory(AData:pointer; ASize:integer):pointer;
+begin
+  Result := MemoryPoolObject.GetMem(ASize);
+  Move(AData^, Result^, ASize);
 end;
 
 { TMemoryPool64 }

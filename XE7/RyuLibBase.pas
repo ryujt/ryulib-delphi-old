@@ -6,6 +6,7 @@ unit RyuLibBase;
 interface
 
 uses
+  ValueList,
   Windows, Classes, SysUtils, Types;
 
 type
@@ -61,6 +62,7 @@ type
   TIntegerEvent = procedure (Sender:TObject; AValue:Integer) of object;
   TStringEvent = procedure (Sender:TObject; const AValue:string) of object;
   TMsgAndCodeEvent = procedure (Sender:TObject; const AMsg:string; ACode:integer) of object;
+  TValueListEvent = procedure (Sender:TObject; AValueList:TValueList) of object;
 
   TObjectClass = class of TObject;
 

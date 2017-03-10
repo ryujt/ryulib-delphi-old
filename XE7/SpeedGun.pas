@@ -60,8 +60,6 @@ begin
 end;
 
 destructor TSpeedGun.Destroy;
-var
-  SpeedInfo : TSpeedInfo;
 begin
   do_Clear;
 
