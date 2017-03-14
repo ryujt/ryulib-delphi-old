@@ -63,7 +63,7 @@ procedure CreateMemoryPool(APoolSize:int64);
 function GetMemory(ASize:integer):pointer; overload;
 procedure GetMemory(var AData:pointer; ASize:integer); overload;
 
-function CopyMemory(AData:pointer; ASize:integer):pointer;
+function CloneMemory(AData:pointer; ASize:integer):pointer;
 
 implementation
 
@@ -91,7 +91,7 @@ begin
   MemoryPoolObject.GetMem(AData, ASize);
 end;
 
-function CopyMemory(AData:pointer; ASize:integer):pointer;
+function CloneMemory(AData:pointer; ASize:integer):pointer;
 begin
   Result := MemoryPoolObject.GetMem(ASize);
   Move(AData^, Result^, ASize);
