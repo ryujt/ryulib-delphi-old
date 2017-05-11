@@ -59,15 +59,18 @@ end;
 function GetJsonFromHTTP(const AURL:string):TJsonData;
 var
   http : TIdHTTP;
+  sResult : string;
 begin
   Result := TJsonData.Create;
 
   http := TIdHTTP.Create(nil);
   try
-    Result.Text := http.Get(AURL);
+    sResult := http.Get(AURL);
+
+    if Trim(sResult) <> '' then Result.Text := sResult;
 
     {$IFDEF DEBUG}
-    Trace( Format('JsonUtils.GetJsonFromHTTP - %s', [Result.Text]) );
+    Trace( Format('JsonUtils.GetJsonFromHTTP - %s', [sResult]) );
     {$ENDIF}
   finally
     http.Free;

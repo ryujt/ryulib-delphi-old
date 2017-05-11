@@ -3,6 +3,7 @@ unit JsonData;
 interface
 
 uses
+  DebugTools,
   System.JSON,
   Data.DBXJSON,
   Windows, Classes, SysUtils;
@@ -204,10 +205,14 @@ var
   Pair: TJSONPair;
 begin
   Result := '';
-  if FJSONObject = nil then Exit;
-  
-  Pair := FJSONObject.Get(AName);
-  if Pair <> nil then Result := Pair.JsonValue.Value;
+  try
+    if FJSONObject = nil then Exit;
+
+    Pair := FJSONObject.Get(AName);
+    if (Pair <> nil) and (Pair.JsonValue <> nil) then Result := Pair.JsonValue.Value;
+  except
+    on E : Exception do Trace( Format('TJsonData.GetValues - %s', [E.Message]) );
+  end;
 end;
 
 procedure TJsonData.LoadFromFile(AFileName: string);
