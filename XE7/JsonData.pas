@@ -55,8 +55,12 @@ type
     procedure LoadFromFile(AFileName:string);
     procedure SaveToFile(AFileName:string);
 
-    function GetJsonData(AName:string):TJsonData;
-    function GetJsonText(AName:string):string;
+    function GetJsonData(const AName:string):TJsonData; overload;
+    function GetJsonData(AIndex:integer):TJsonData; overload;
+
+    function GetJsonText(const AName:string):string; overload;
+    function GetJsonText(AIndex:integer):string; overload;
+
     procedure SetJsonData(AName,AText:string);
 
     procedure Delete(AIndex:integer); overload;
@@ -153,7 +157,7 @@ begin
   if Pair <> nil then Result := TJSONNumber(Pair.JsonValue).AsInt;
 end;
 
-function TJsonData.GetJsonData(AName: string): TJsonData;
+function TJsonData.GetJsonData(const AName: string): TJsonData;
 var
   Pair: TJSONPair;
 begin
@@ -164,7 +168,7 @@ begin
   if Pair <> nil then Result.Text := TJSONObject(Pair.JsonValue).ToString;
 end;
 
-function TJsonData.GetJsonText(AName:string):string;
+function TJsonData.GetJsonText(const AName:string):string;
 var
   JsonData : TJsonData;
 begin
@@ -540,6 +544,29 @@ begin
       if Pair <> nil then Pair.Free;
       AddPair(AName, NewValue);
     end;
+  end;
+end;
+
+function TJsonData.GetJsonData(AIndex: integer): TJsonData;
+var
+  Pair: TJSONPair;
+begin
+  Result := TJsonData.Create;
+  if FJSONObject = nil then Exit;
+
+  Pair := FJSONObject.Pairs[AIndex];
+  if Pair <> nil then Result.Text := TJSONObject(Pair.JsonValue).ToString;
+end;
+
+function TJsonData.GetJsonText(AIndex: integer): string;
+var
+  JsonData : TJsonData;
+begin
+  JsonData := GetJsonData(AIndex);
+  try
+    Result := JsonData.Text;
+  finally
+    JsonData.Free;
   end;
 end;
 
