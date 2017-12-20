@@ -23,6 +23,7 @@ type
     procedure Clear;
     procedure Update;
     procedure KillByIndex(Index:integer);
+    procedure KillByName(AFilename:string);
     procedure KillByFullName(AFullName:string);
 
     property Items [Index:integer] : TProcessEntry32 read GetItems;
@@ -234,6 +235,24 @@ begin
   // 명시한 process를 강제 종료시킨다
   TermSucc := TerminateProcess(hProcess, 0);
   if TermSucc = false then raise Exception.Create('KillProcess: TerminateProcess error !');
+end;
+
+procedure TProcessList.KillByName(AFilename: string);
+var
+  hProcess : THandle;
+  Loop: Integer;
+begin
+  AFilename := LowerCase(AFilename);
+
+  for Loop := 0 to FList.Count-1 do begin
+    if AFilename = LowerCase(Names[Loop]) then begin
+      hProcess := OpenProcess(PROCESS_TERMINATE, TRUE, Items[Loop].th32ProcessID);
+      if hProcess <> NULL then begin
+        TerminateProcess(hProcess, 0);
+        CloseHandle(hProcess);
+      end;
+    end;
+  end;
 end;
 
 procedure TProcessList.Update;
