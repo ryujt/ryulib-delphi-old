@@ -11,14 +11,18 @@ function CharString(Ch:Char; Length:integer):string;
 Procedure DeleteChar(var Strg:String; C:Char);
 
 function MiddleStr(Text,stStart,stEnd:string; IgnoreCase:boolean=true):string;
+
 function DeleteLeft(Text,Border:string; IgnoreCase:boolean=true):string;
 function DeleteLeftPlus(Text:string; Border:string; IgnoreCase:boolean=true):string;
+
 function DeleteRight(Text:string; Border:string; IgnoreCase:boolean=true):string;
 function DeleteRightPlus(Text:string; Border:string; IgnoreCase:boolean=true):string;
 
 Procedure DeleteSpcLeft(var Strg:String);
 Procedure DeleteSpcRight(var Strg:String);
-Function  SetLengthTo(Text,stEnd:String):String;
+
+function  SetLengthTo(Text,stEnd:string):string;
+function  SetLengthBefore(Text,stEnd:string):string;
 
 // 한글 문자열을 복사한다.  잘림방지
 Function  CopyHan(St:String; Count:Integer):String;
@@ -208,6 +212,15 @@ Begin
   iPos:= Pos(stEnd, Result);
   If iPos > 0 then SetLength(Result, iPos);
 End;
+
+function  SetLengthBefore(Text,stEnd:string):string;
+var
+  iPos : Integer;
+begin
+  Result:= Text;
+  iPos:= Pos(stEnd, Result);
+  if iPos > 0 then SetLength(Result, iPos-1);
+end;
 
 function  CopyHan(St:String; Count:Integer):String;
 var
