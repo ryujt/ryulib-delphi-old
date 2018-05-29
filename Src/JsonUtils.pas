@@ -87,7 +87,7 @@ end;
 
 procedure TphpArrayToStringList.do_Escape;
 begin
-  FLine := FLine + FCurrentChar;
+  FLine := FLine + '\' + FCurrentChar;
   FState := stString;
 end;
 

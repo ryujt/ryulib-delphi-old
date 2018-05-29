@@ -5,7 +5,6 @@ interface
 uses
   DebugTools,
   System.JSON,
-  Data.DBXJSON,
   Windows, Classes, SysUtils;
 
 type
