@@ -87,7 +87,14 @@ end;
 
 procedure TphpArrayToStringList.do_Escape;
 begin
-  FLine := FLine + FCurrentChar;
+  case FCurrentChar of
+    'b': FLine := FLine + #8;
+    't': FLine := FLine + #9;
+    'n': FLine := FLine + #13#10;
+    else
+      FLine := FLine + FCurrentChar;
+  end;
+
   FState := stString;
 end;
 
