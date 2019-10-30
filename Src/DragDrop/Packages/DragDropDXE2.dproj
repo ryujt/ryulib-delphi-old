@@ -1,6 +1,6 @@
 ﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
-			<ProjectGuid>{3F508CD2-4629-477B-ACB9-15D98A55F770}</ProjectGuid>
+			<ProjectGuid>{0E30059E-0AB1-41B7-B357-D3443D90DC09}</ProjectGuid>
 			<MainSource>DragDropDXE2.dpk</MainSource>
 			<Base>True</Base>
 			<Config Condition="'$(Config)'==''">Debug</Config>
@@ -11,6 +11,11 @@
 			<Platform Condition="'$(Platform)'==''">Win32</Platform>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+			<Base_Win64>true</Base_Win64>
+			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
@@ -28,53 +33,62 @@
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+			<Cfg_2_Win32>true</Cfg_2_Win32>
+			<CfgParent>Cfg_2</CfgParent>
+			<Cfg_2>true</Cfg_2>
+			<Base>true</Base>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
-			<DCC_ExeOutput>..\Library\Delphi 2011</DCC_ExeOutput>
-			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
-			<DCC_UnitSearchPath>..\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
-			<DesignOnlyPackage>true</DesignOnlyPackage>
-			<DCC_IOChecking>false</DCC_IOChecking>
-			<DCC_ImageBase>00456789</DCC_ImageBase>
-			<DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;System.Win;$(DCC_Namespace)</DCC_Namespace>
-			<DCC_Description>Drag and Drop Component Suite</DCC_Description>
-			<DCC_BplOutput>..\Library\Delphi 2011</DCC_BplOutput>
-			<DCC_RangeChecking>true</DCC_RangeChecking>
-			<DCC_Define>DEBUG;DESIGNTIME;$(DCC_Define)</DCC_Define>
-			<DCC_Optimize>false</DCC_Optimize>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_TypedAtParameter>true</DCC_TypedAtParameter>
 			<DCC_Alignment>4</DCC_Alignment>
-			<VerInfo_Keys>CompanyName=Anders Melander;FileDescription=Drag and Drop Component Suite;InternalName=DragDrop;OriginalFilename=DragDrop;ProductName=DragDrop;Comments=This is freeware. Use as you please, but please give me credit.;mailto=anders@melander.dk;URL=http://melander.dk</VerInfo_Keys>
-			<DCC_N>false</DCC_N>
-			<DCC_K>false</DCC_K>
-			<DCC_F>false</DCC_F>
-			<DCC_S>false</DCC_S>
-			<GenDll>true</GenDll>
-			<DCC_DcpOutput>..\Library\Delphi 2011</DCC_DcpOutput>
+			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
+			<VerInfo_Locale>1033</VerInfo_Locale>
+			<DesignOnlyPackage>true</DesignOnlyPackage>
 			<DCC_ImportedDataReferences>false</DCC_ImportedDataReferences>
 			<GenPackage>true</GenPackage>
-			<DCC_TypedAtParameter>true</DCC_TypedAtParameter>
-			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_K>false</DCC_K>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_F>false</DCC_F>
+			<DCC_IOChecking>false</DCC_IOChecking>
+			<DCC_RangeChecking>true</DCC_RangeChecking>
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+			<DCC_Define>DEBUG;DESIGNTIME;$(DCC_Define)</DCC_Define>
+			<DCC_Optimize>false</DCC_Optimize>
+			<DCC_N>false</DCC_N>
+			<DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
+			<DCC_Description>Drag and Drop Component Suite</DCC_Description>
+			<DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win;Vcl;$(DCC_Namespace)</DCC_Namespace>
+			<DCC_ImageBase>00456789</DCC_ImageBase>
+			<DCC_S>false</DCC_S>
 			<DCC_E>false</DCC_E>
-			<VerInfo_Locale>1055</VerInfo_Locale>
-			<DCC_DcuOutput>..\Library\Delphi 2011</DCC_DcuOutput>
+			<GenDll>true</GenDll>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base_Win64)'!=''">
+			<DCC_UsePackage>vcl;$(DCC_UsePackage)</DCC_UsePackage>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win32)'!=''">
-			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-			<DCC_Namespace>Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
 			<VerInfo_Locale>1033</VerInfo_Locale>
+			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+			<DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+			<DCC_UsePackage>vcl;$(DCC_UsePackage)</DCC_UsePackage>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
-			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
-			<DCC_DebugInformation>false</DCC_DebugInformation>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+			<DCC_Optimize>false</DCC_Optimize>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="$(MainSource)">
@@ -92,12 +106,11 @@
 			<DCCReference Include="..\Source\DropHandler.dcr"/>
 			<DCCReference Include="..\Source\DropSource.dcr"/>
 			<DCCReference Include="..\Source\DropTarget.dcr"/>
-			<DCCReference Include="designide.dcp"/>
 			<DCCReference Include="rtl.dcp"/>
+			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="..\Source\DragDrop.pas"/>
 			<DCCReference Include="..\Source\DragDropComObj.pas"/>
 			<DCCReference Include="..\Source\DragDropContext.pas"/>
-			<DCCReference Include="..\Source\DragDropDesign.pas"/>
 			<DCCReference Include="..\Source\DragDropFile.pas"/>
 			<DCCReference Include="..\Source\DragDropFormats.pas"/>
 			<DCCReference Include="..\Source\DragDropGraphics.pas"/>
@@ -130,7 +143,7 @@
 						<Source Name="MainSource">DragDropDXE2.dpk</Source>
 					</Source>
 					<VersionInfo>
-						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
@@ -141,18 +154,20 @@
 						<VersionInfo Name="Special">False</VersionInfo>
 						<VersionInfo Name="Private">False</VersionInfo>
 						<VersionInfo Name="DLL">False</VersionInfo>
-						<VersionInfo Name="Locale">1055</VersionInfo>
-						<VersionInfo Name="CodePage">1254</VersionInfo>
+						<VersionInfo Name="Locale">1033</VersionInfo>
+						<VersionInfo Name="CodePage">1252</VersionInfo>
 					</VersionInfo>
 					<VersionInfoKeys>
-						<VersionInfoKeys Name="CompanyName">Anders Melander</VersionInfoKeys>
-						<VersionInfoKeys Name="FileDescription">Drag and Drop Component Suite</VersionInfoKeys>
-						<VersionInfoKeys Name="InternalName">DragDrop</VersionInfoKeys>
-						<VersionInfoKeys Name="OriginalFilename">DragDrop</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductName">DragDrop</VersionInfoKeys>
-						<VersionInfoKeys Name="Comments">This is freeware. Use as you please, but please give me credit.</VersionInfoKeys>
-						<VersionInfoKeys Name="mailto">anders@melander.dk</VersionInfoKeys>
-						<VersionInfoKeys Name="URL">http://melander.dk</VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 				</Delphi.Personality>
 				<Platforms>
@@ -166,8 +181,3 @@
 		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
 		<Import Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')" Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"/>
 	</Project>
-
-<!-- EurekaLog First Line
-[Exception Log]
-EurekaLog Version=7001
-EurekaLog Last Line -->

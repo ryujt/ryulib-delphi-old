@@ -1,14 +1,16 @@
 unit DragDrop;
 // -----------------------------------------------------------------------------
-// Project:         Drag and Drop Component Suite
+// Project:         New Drag and Drop Component Suite
 // Module:          DragDrop
 // Description:     Implements base classes and utility functions.
-// Version:         5.2
-// Date:            17-AUG-2010
-// Target:          Win32, Delphi 5-2010
+// Version:         5.7
+// Date:            28-FEB-2015
+// Target:          Win32, Win64, Delphi 6-XE7
 // Authors:         Anders Melander, anders@melander.dk, http://melander.dk
-// Copyright        ?1997-1999 Angus Johnson & Anders Melander
-//                  ?2000-2010 Anders Melander
+// Latest Version   https://github.com/landrix/The-new-Drag-and-Drop-Component-Suite-for-Delphi
+// Copyright        © 1997-1999 Angus Johnson & Anders Melander
+//                  © 2000-2010 Anders Melander
+//                  © 2011-2015 Sven Harazim
 // -----------------------------------------------------------------------------
 // TODO -oanme -cPortability : Replace all public use of HWND with THandle. BCB's HWND <> Delphi's HWND.
 
@@ -17,40 +19,42 @@ interface
 {$include DragDrop.inc}
 
 uses
-{$ifndef VER17_PLUS}
-  Graphics,
-{$endif}
-  Classes,
-  Controls,
-  Windows,
-  ActiveX;
+  {$IF CompilerVersion >= 23.0}
+  System.SysUtils,System.Classes,{$ifdef DEBUG}System.Win.ComObj,{$endif}System.Types,
+  WinApi.Windows,WinApi.ActiveX,Winapi.Messages,Winapi.MMSystem,Winapi.ShlObj,
+  Vcl.Controls,Vcl.Graphics
+  {$else}
+  SysUtils,Classes,{$ifdef DEBUG}ComObj,{$endif}
+  Windows,ActiveX,Messages,MMSystem,ShlObj,
+  Controls,Graphics
+  {$ifend}
+  ;
 
-
-{$ifdef VER135_PLUS}
+{$IFDEF BCB}
 // shldisp.h only exists in C++Builder 5 and later.
 {$HPPEMIT '#include <shldisp.h>'}
-{$endif}
+{$ENDIF}
 
 {$HPPEMIT '#ifndef NO_WIN32_LEAN_AND_MEAN'}
 {$HPPEMIT '#error The NO_WIN32_LEAN_AND_MEAN symbol must be defined in your projects conditional defines'}
 {$HPPEMIT '#endif'}
 
-{$ifndef VER12_PLUS}
-// Fix for C++Builder 3.
-{$HPPEMIT '#define TPoint tagPOINT'}
-{$endif}
+//{$ifndef VER12_PLUS}
+//// Fix for C++Builder 3.
+//{$HPPEMIT '#define TPoint tagPOINT'}
+//{$endif}
 
-{$ifdef VER135_PLUS}
+{$IFDEF BCB}
 // Fix for BCB5
 // Needed since "FAsyncDropSource: IDropSource" in TCustomDropSource becomes
 // "_di_IDropSource FAsyncDropSource".
 {$HPPEMIT 'typedef System::DelphiInterface<IDropSource> _di_IDropSource;'}
-{$endif}
+{$ENDIF}
 
 {_$HPPEMIT 'typedef System::DelphiInterface<IDragSourceHelper> _di_IDragSourceHelper;'}
-{$ifndef VER135_PLUS}
+{$IFDEF BCB}
 {_$HPPEMIT 'typedef System::DelphiInterface<IAsyncOperation> _di_IAsyncOperation;'}
-{$endif}
+{$ENDIF}
 {_$HPPEMIT 'typedef System::DelphiInterface<IDropTargetHelper> _di_IDropTargetHelper;'}
 {_$HPPEMIT 'typedef System::DelphiInterface<IDragSourceHelper> _di_IDragSourceHelper;'}
 
@@ -63,10 +67,10 @@ uses
 {$HPPEMIT 'DECLARE_DINTERFACE_TYPE(IBindCtx)'}
 
 
-const
-  DragDropSuiteVersion = 5.0;
-  DragDropSuiteVersionMajor = 5;
-  DragDropSuiteVersionMinor = 0;
+//const
+//  DragDropSuiteVersion = 5.0;
+//  DragDropSuiteVersionMajor = 5;
+//  DragDropSuiteVersionMinor = 0;
 
 // Pre-unicode compatibility
 {$ifndef UNICODE}
@@ -75,13 +79,13 @@ type
 {$endif}
 
 // Pre D2005 compatibility
-{$ifndef VER17_PLUS}
+{$IF CompilerVersion < 17.0}
 type
   TBitmap = class(Graphics.TBitmap)
   public
     procedure SetSize(NewWidth, NewHeight: integer);
   end;
-{$endif}
+{$ifend}
 
 const
   {$EXTERNALSYM DROPEFFECT_NONE}
@@ -89,11 +93,11 @@ const
   {$EXTERNALSYM DROPEFFECT_MOVE}
   {$EXTERNALSYM DROPEFFECT_LINK}
   {$EXTERNALSYM DROPEFFECT_SCROLL}
-  DROPEFFECT_NONE   = ActiveX.DROPEFFECT_NONE;
-  DROPEFFECT_COPY   = ActiveX.DROPEFFECT_COPY;
-  DROPEFFECT_MOVE   = ActiveX.DROPEFFECT_MOVE;
-  DROPEFFECT_LINK   = ActiveX.DROPEFFECT_LINK;
-  DROPEFFECT_SCROLL = ActiveX.DROPEFFECT_SCROLL;
+  DROPEFFECT_NONE   = {$IF CompilerVersion >= 23.0}WinApi.{$ifend}ActiveX.DROPEFFECT_NONE;
+  DROPEFFECT_COPY   = {$IF CompilerVersion >= 23.0}WinApi.{$ifend}ActiveX.DROPEFFECT_COPY;
+  DROPEFFECT_MOVE   = {$IF CompilerVersion >= 23.0}WinApi.{$ifend}ActiveX.DROPEFFECT_MOVE;
+  DROPEFFECT_LINK   = {$IF CompilerVersion >= 23.0}WinApi.{$ifend}ActiveX.DROPEFFECT_LINK;
+  DROPEFFECT_SCROLL = {$IF CompilerVersion >= 23.0}WinApi.{$ifend}ActiveX.DROPEFFECT_SCROLL;
 
 type
   (*
@@ -151,8 +155,7 @@ const
 type
   TInterfacedComponent = class(TComponent, IUnknown)
   protected
-    function QueryInterface(const IID: TGuid; out Obj): HRESULT;
-      {$IFDEF VER13_PLUS} override; {$ELSE} reintroduce; {$ENDIF} stdcall;
+    function QueryInterface(const IID: TGuid; out Obj): HRESULT; override; stdcall;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
   end;
@@ -327,7 +330,7 @@ type
     property FormatList: TDataFormats read FFormatList;
   public
     constructor Create(AOwner: TDragDropComponent);  overload; virtual;
-    constructor Create(Dummy: pointer); overload; {$ifdef VER17_PLUS}deprecated {$IFDEF VER20_PLUS}'Use Create(TDataFormatDirection) instead of Create(nil)'{$ENDIF};{$endif}
+    constructor Create(Dummy: pointer); overload; {$IF CompilerVersion >= 17.0}deprecated {$IF CompilerVersion >= 20.0} 'Use Create(TDataFormatDirection) instead of Create(nil)'{$ifend};{$ifend}
     constructor Create(Direction: TDataFormatDirection); overload; virtual;
     destructor Destroy; override;
     procedure Clear; virtual; abstract;
@@ -373,39 +376,38 @@ type
     property Count: integer read GetCount;
   end;
 
-{$ifndef VER17_PLUS}
+{$IF CompilerVersion < 17.0}
   TDataFormatClassListProxy = class
   private
     class function GetItem(Index: integer): TDataFormatClass;
   public
     property Items[Index: integer]: TDataFormatClass read GetItem; default;
   end;
-{$endif}
+{$ifend}
 
   // TDataFormatClasses
   // List of TCustomDataFormat classes.
   TDataFormatClasses = class(TObject)
   private
-    FList: TList;
-  {$ifdef VER185_PLUS}strict{$endif} private
+    FList: TList; {$IF CompilerVersion >= 18.0}strict{$ifend} private
 
     { Provides singleton access to the global data format database }
     class function Instance: TDataFormatClasses;
   protected
-    class function GetFormat(Index: integer): TDataFormatClass; {$ifdef VER17_PLUS}static;{$endif}
-    class function GetCount: integer; {$ifdef VER17_PLUS}static;{$endif}
+    class function GetFormat(Index: integer): TDataFormatClass; {$IF CompilerVersion >= 17.0}static;{$ifend}
+    class function GetCount: integer; {$IF CompilerVersion >= 17.0}static;{$ifend}
   public
     constructor Create;
     destructor Destroy; override;
     class function Add(DataFormat: TDataFormatClass): integer; // virtual;
     class procedure Remove(DataFormat: TDataFormatClass); // virtual;
-{$ifdef VER17_PLUS}
+{$IF CompilerVersion >= 17.0}
     class property Formats[Index: integer]: TDataFormatClass read GetFormat;
     class property Count: integer read GetCount;
 {$else}
     class function Count: integer;
     class function Formats: TDataFormatClassListProxy;
-{$endif}
+{$ifend}
   end;
 
   // TDataFormatMap
@@ -554,18 +556,18 @@ type
 // Requires Windows 2000 or later.
 ////////////////////////////////////////////////////////////////////////////////
 const
-{$ifdef VER135_PLUS}
+{$IFDEF BCB}
   {_$EXTERNALSYM IID_IAsyncOperation}
 {$endif}
   IID_IAsyncOperation: TGUID = (
     D1:$3D8B0590; D2:$F691; D3:$11D2; D4:($8E,$A9,$00,$60,$97,$DF,$5B,$D4));
-{$ifdef VER135_PLUS}
+{$IFDEF BCB}
   {_$EXTERNALSYM SID_IAsyncOperation}
 {$endif}
   SID_IAsyncOperation = '{3D8B0590-F691-11D2-8EA9-006097DF5BD4}';
 
 type
-{$ifdef VER135_PLUS}
+{$IFDEF BCB}
   {_$EXTERNALSYM IAsyncOperation}
 {$endif}
   // Note:
@@ -762,14 +764,14 @@ var
 
 // The following DVASPECT constants are missing from some versions of Delphi and
 // C++Builder.
-{$ifndef VER135_PLUS}
-const
-{$ifndef VER10_PLUS}
-  DVASPECT_SHORTNAME = 2; // use for CF_HDROP to get short name version of file paths
-{$endif}
-  DVASPECT_COPY = 3; // use to indicate format is a "Copy" of the data (FILECONTENTS, FILEDESCRIPTOR, etc)
-  DVASPECT_LINK = 4; // use to indicate format is a "Shortcut" to the data (FILECONTENTS, FILEDESCRIPTOR, etc)
-{$endif}
+//{$ifndef VER135_PLUS}
+//const
+//{$ifndef VER10_PLUS}
+//  DVASPECT_SHORTNAME = 2; // use for CF_HDROP to get short name version of file paths
+//{$endif}
+//  DVASPECT_COPY = 3; // use to indicate format is a "Copy" of the data (FILECONTENTS, FILEDESCRIPTOR, etc)
+//  DVASPECT_LINK = 4; // use to indicate format is a "Shortcut" to the data (FILECONTENTS, FILEDESCRIPTOR, etc)
+//{$endif}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -785,24 +787,15 @@ function WStrPLCopy(Dest: PWideChar; const Source: WideString; MaxLen: Cardinal)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//              Tibur?
+//              Tiburón
 //
 ////////////////////////////////////////////////////////////////////////////////
-{$ifdef VER200}
-// TODO : Temporary
-function StringToWideChar(const Source: UnicodeString; Dest: PWideChar; DestSize: Integer): PWideChar;
-{$endif}
 
-{$ifndef VER20_PLUS}
+{$IF CompilerVersion < 20.0}
 const
   CP_THREAD_ACP = 3; // current thread's ANSI code page
   DefaultSystemCodePage = CP_THREAD_ACP;
-{$endif}
-
-const
-  // AnsiString makes the linker include the string even if it isn't referenced
-  sDragDropCopyright: AnsiString = 'Drag and Drop Component Suite. Copyright ?1997-2010 Anders Melander';
-
+{$ifend}
 
 (*******************************************************************************
 **
@@ -812,16 +805,10 @@ const
 implementation
 
 uses
-{$ifdef DEBUG}
-  ComObj,
-{$endif}
   DragDropFormats, // Used by TRawClipboardFormat
   DropSource,
-  DropTarget,
-  Messages,
-  ShlObj,
-  MMSystem,
-  SysUtils;
+  DropTarget
+  ;
 
 resourcestring
   sImplementationRequired = 'Internal error: %s.%s needs implementation';
@@ -836,26 +823,26 @@ resourcestring
 //              Pre D2005 support
 //
 ////////////////////////////////////////////////////////////////////////////////
-{$ifndef VER17_PLUS}
+{$IF CompilerVersion < 17.0}
 procedure TBitmap.SetSize(NewWidth, NewHeight: integer);
 begin
   Width := NewWidth;
   Height := NewHeight;
 end;
-{$endif}
+{$ifend}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//              Tibur?
+//              Tiburón
 //
 ////////////////////////////////////////////////////////////////////////////////
-{$IFDEF VER200}
-function StringToWideChar(const Source: UnicodeString; Dest: PWideChar; DestSize: Integer): PWideChar;
-begin
-  StrPLCopy(Dest, Source, DestSize);
-  Result := Dest;
-end;
-{$ENDIF}
+//{$IFDEF VER200}
+//function StringToWideChar(const Source: UnicodeString; Dest: PWideChar; DestSize: Integer): PWideChar;
+//begin
+//  StrPLCopy(Dest, Source, DestSize);
+//  Result := Dest;
+//end;
+//{$ENDIF}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -895,7 +882,7 @@ function TInterfacedComponent.QueryInterface(const IID: TGuid; out Obj): HRESULT
   var
     GUID: string;
   begin
-    GUID := ComObj.GUIDToString(IID);
+    GUID := {$IF CompilerVersion >= 23.0}System.Win.{$ifend}ComObj.GUIDToString(IID);
     Result := GetRegStringValue('Interface\'+GUID, '');
     if (Result = '') then
       Result := GUID;
@@ -1179,7 +1166,7 @@ var
   Len: integer;
 begin
   SetLength(Result, 255); // 255 is just an artificial limit.
-  Len := Windows.GetClipboardFormatName(GetClipboardFormat, PChar(Result), 255);
+  Len := {$IF CompilerVersion >= 23.0}WinApi.{$ifend}Windows.GetClipboardFormatName(GetClipboardFormat, PChar(Result), 255);
   SetLength(Result, Len);
 end;
 
@@ -1624,7 +1611,7 @@ begin
   Instance.FList.Remove(DataFormat);
 end;
 
-{$ifndef VER17_PLUS}
+{$IF CompilerVersion < 17.0}
 class function TDataFormatClasses.Count: integer;
 begin
   Result := TDataFormatClasses.GetCount;
@@ -1639,7 +1626,7 @@ class function TDataFormatClassListProxy.GetItem(Index: integer): TDataFormatCla
 begin
   Result := TDataFormatClasses(Self).GetFormat(Index); // Dirty hack!
 end;
-{$endif}
+{$ifend}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1955,13 +1942,8 @@ begin
   begin
     if not(csLoading in ComponentState) then
       Enabled := False;
-{$ifdef VER13_PLUS}
     if (FDragDropComponent <> nil) then
       FDragDropComponent.RemoveFreeNotification(Self);
-{$else}
-    if (FDragDropComponent <> nil) then
-      FDragDropComponent.Notification(Self, opRemove);
-{$endif}
     FDragDropComponent := Value;
     if (Value <> nil) then
       Value.FreeNotification(Self);
@@ -2048,7 +2030,7 @@ begin
   // calls to the clear method and instead introduces the ClearData method.
 
   // Since Clear() doesn't do anything the class must make sure that ClearData()
-  // is called before FMedium is modified. Otherwise we will leak. 
+  // is called before FMedium is modified. Otherwise we will leak.
 end;
 
 procedure TRawClipboardFormat.ClearData;
@@ -2101,7 +2083,7 @@ begin
   // This doesn't seem to be necessary on any version of Win2K, but if they
   // say it must be done then I'll better do it...
   if (Result) and (FMedium.tymed = TYMED_ISTREAM) then
-    IStream(FMedium.stm).Seek(0, STREAM_SEEK_SET, PLargeint(nil)^);
+    IStream(FMedium.stm).Seek(0, STREAM_SEEK_SET, {$if CompilerVersion < 29}PLargeInt{$else}PUInt64{$ifend}(nil)^);
 end;
 
 function TRawClipboardFormat.DoSetData(const FormatEtcIn: TFormatEtc;
@@ -2187,11 +2169,7 @@ end;
 ////////////////////////////////////////////////////////////////////////////////
 procedure _RaiseLastWin32Error;
 begin
-{$ifdef VER14_PLUS}
   RaiseLastOSError;
-{$else}
-  RaiseLastWin32Error;
-{$endif}
 end;
 
 function DropEffectToDragType(DropEffect: longInt; var DragType: TDragType): boolean;
@@ -2463,7 +2441,7 @@ begin
       @_CopyStgMedium := GetProcAddress(URLMONDLL, 'CopyStgMedium');
   end;
 
-  if not Assigned(_CopyStgMedium) then
+  if not Assigned(@_CopyStgMedium) then
     raise Exception.Create(sNoCopyStgMedium);
 
   Result := (Succeeded(_CopyStgMedium(SrcMedium, DstMedium)));
@@ -2480,14 +2458,22 @@ function GetClipboardFormatNameStr(Value: TClipFormat): string;
     SetLength(Result, len);
   end;
 
+// Updated by:      Wishmaster
+// Date:            30-MAR-2012
+// For              Delphi XE2
+
+// Updated by:      Sven Harazim
+// Date:            04-NOV-2012
+// For              Delphi XE3 Win32
 const
   sClipNames: array[CF_TEXT..CF_MAX-1] of string =
     ('CF_TEXT', 'CF_BITMAP', 'CF_METAFILEPICT', 'CF_SYLK', 'CF_DIF', 'CF_TIFF',
     'CF_OEMTEXT', 'CF_DIB', 'CF_PALETTE', 'CF_PENDATA', 'CF_RIFF', 'CF_WAVE',
-    'CF_UNICODETEXT', 'CF_ENHMETAFILE', 'CF_HDROP', 'CF_LOCALE','CF_DIBV5');
+    'CF_UNICODETEXT', 'CF_ENHMETAFILE', 'CF_HDROP', 'CF_LOCALE'{$IF CompilerVersion >= 23.0}, 'CF_DIBV5'{$ifend});
 begin
   case Value of
     CF_TEXT..CF_MAX-1: Result := sClipNames[Value];
+    {$IF CompilerVersion < 23.0}17: Result := 'CF_DIBV5';{$ifend}
     18: Result := 'CF_MAX_XP';
     128: Result := 'CF_OWNERDISPLAY';
     129: Result := 'CF_DSPTEXT';
@@ -2529,5 +2515,7 @@ finalization
 
   if (NeedOleUninitialize) then
     OleUninitialize;
+  // The boolean must be reset to false
+  DragDropShutdown := False;
 end.
 

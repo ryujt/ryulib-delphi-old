@@ -1,18 +1,19 @@
 unit DragDropDesign;
-// TODO : Default event for target components should be OnDrop.
-// TODO : Add parent form to Target property editor list.
 // -----------------------------------------------------------------------------
-// Project:         Drag and Drop Component Suite
-// Module:          DragDropDesign
-// Description:     Contains design-time support for the drag and drop
-//                  components.
-// Version:         5.2
-// Date:            17-AUG-2010
-// Target:          Win32, Delphi 5-2010
+// Project:         New Drag and Drop Component Suite
+// Module:          DragDrop
+// Description:     Implements base classes and utility functions.
+// Version:         5.7
+// Date:            28-FEB-2015
+// Target:          Win32, Win64, Delphi 6-XE7
 // Authors:         Anders Melander, anders@melander.dk, http://melander.dk
+// Latest Version   https://github.com/landrix/The-new-Drag-and-Drop-Component-Suite-for-Delphi
 // Copyright        © 1997-1999 Angus Johnson & Anders Melander
 //                  © 2000-2010 Anders Melander
+//                  © 2011-2015 Sven Harazim
 // -----------------------------------------------------------------------------
+// TODO : Default event for target components should be OnDrop.
+// TODO : Add parent form to Target property editor list.
 
 interface
 
@@ -23,6 +24,17 @@ procedure Register;
 implementation
 
 uses
+  {$IF CompilerVersion >= 23.0}
+  System.Classes,
+  {$else}
+  Classes,
+  {$ifend}
+  {$IF CompilerVersion < 14.0}
+  DsgnIntf,
+  {$else}
+  DesignIntf,
+  DesignEditors,
+  {$ifend}
   DragDrop,
   DropSource,
   DropTarget,
@@ -34,14 +46,7 @@ uses
   DragDropInternet,
   DragDropPIDL,
   DragDropText,
-  DropComboTarget,
-{$ifndef VER14_PLUS}
-  DsgnIntf,
-{$else}
-  DesignIntf,
-  DesignEditors,
-{$endif}
-  Classes;
+  DropComboTarget;
 
 type
   TDataFormatNameEditor = class(TStringProperty)

@@ -35,9 +35,7 @@ package DragDropD6;
 {$MINENUMSIZE 1}
 {$IMAGEBASE $456789}
 {$DESCRIPTION 'Drag and Drop Component Suite'}
-{$DESIGNONLY}
 {$IMPLICITBUILD OFF}
-{$DEFINE DEBUG}
 
 requires
   Vcl,

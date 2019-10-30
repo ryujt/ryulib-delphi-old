@@ -1,28 +1,37 @@
 unit DragDropHandler;
 // -----------------------------------------------------------------------------
-// Project:         Drag and Drop Component Suite.
-// Module:          DragDropHandler
-// Description:     Implements Drop and Drop Context Menu Shell Extenxions
-//                  (a.k.a. drag-and-drop handlers).
-// Version:         5.2
-// Date:            17-AUG-2010
-// Target:          Win32, Delphi 5-2010
+// Project:         New Drag and Drop Component Suite
+// Module:          DragDrop
+// Description:     Implements base classes and utility functions.
+// Version:         5.7
+// Date:            28-FEB-2015
+// Target:          Win32, Win64, Delphi 6-XE7
 // Authors:         Anders Melander, anders@melander.dk, http://melander.dk
+// Latest Version   https://github.com/landrix/The-new-Drag-and-Drop-Component-Suite-for-Delphi
 // Copyright        © 1997-1999 Angus Johnson & Anders Melander
 //                  © 2000-2010 Anders Melander
+//                  © 2011-2015 Sven Harazim
 // -----------------------------------------------------------------------------
 
 interface
 
 uses
+  {$IF CompilerVersion >= 23.0}
+  System.SysUtils,System.Classes,System.Win.ComObj,System.Win.Registry,
+  WinApi.Windows,WinApi.ShlObj,WinApi.ActiveX,
+  Vcl.Menus,
+  {$ELSE}
+  SysUtils,Classes,ComObj,Registry,
+  Windows,ShlObj,ActiveX,
+  Menus,
+  {$ifend}
   DragDrop,
   DragDropComObj,
-  DragDropContext,
-  Menus,
-  ShlObj,
-  ActiveX,
-  Windows,
-  Classes;
+  DragDropContext;
+
+
+//  DragDropFile,
+//  DragDropPIDL;
 
 {$include DragDrop.inc}
 
@@ -110,12 +119,9 @@ type
 ////////////////////////////////////////////////////////////////////////////////
 implementation
 
-uses
-  DragDropFile,
-  DragDropPIDL,
-  Registry,
-  ComObj,
-  SysUtils;
+//uses
+//  DragDropFile,
+//  DragDropPIDL;
 
 ////////////////////////////////////////////////////////////////////////////////
 //

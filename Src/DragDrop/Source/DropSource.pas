@@ -1,15 +1,16 @@
 unit DropSource;
 // -----------------------------------------------------------------------------
-// Project:         Drag and Drop Component Suite
-// Module:          DropSource
-// Description:     Implements Dragging & Dropping of data
-//                  FROM your application to another.
-// Version:         5.2
-// Date:            17-AUG-2010
-// Target:          Win32, Delphi 5-2010
+// Project:         New Drag and Drop Component Suite
+// Module:          DragDrop
+// Description:     Implements base classes and utility functions.
+// Version:         5.7
+// Date:            28-FEB-2015
+// Target:          Win32, Win64, Delphi 6-XE7
 // Authors:         Anders Melander, anders@melander.dk, http://melander.dk
+// Latest Version   https://github.com/landrix/The-new-Drag-and-Drop-Component-Suite-for-Delphi
 // Copyright        © 1997-1999 Angus Johnson & Anders Melander
 //                  © 2000-2010 Anders Melander
+//                  © 2011-2015 Sven Harazim
 // -----------------------------------------------------------------------------
 // TODO -oanme -cCheckItOut : OleQueryLinkFromData
 // TODO -oanme -cDocumentation : CutToClipboard and CopyToClipboard alters the value of PreferredDropEffect.
@@ -22,19 +23,24 @@ unit DropSource;
 
 interface
 
-uses
-  DragDrop,
-  DragDropFormats,
-  ActiveX,
-  Controls,
-  Windows,
-  Classes;
-
 {$include DragDrop.inc}
-{$ifdef VER135_PLUS}
+
+uses
+  {$IF CompilerVersion >= 23.0}
+  System.SysUtils,System.Classes,System.Win.ComObj,System.Types,
+  WinApi.Windows,WinApi.Messages,WinApi.ActiveX,WinApi.CommCtrl,
+  Vcl.Controls,Vcl.Graphics,
+  {$else}
+  SysUtils,Classes,ComObj,
+  Windows,Messages,ActiveX,CommCtrl,
+  Controls,Graphics,
+  {$ifend}
+  DragDrop,DragDropFormats;
+
+{$IFDEF BCB}
 // shldisp.h only exists in C++Builder 5 and later.
 {$HPPEMIT '#include <shldisp.h>'}
-{$endif}
+{$ENDIF}
 
 type
   // These have been disabled since they break the generated C++ headers.
@@ -309,12 +315,12 @@ type
 *******************************************************************************)
 implementation
 
-uses
-  Messages,
-  CommCtrl,
-  ComObj,
-  Graphics,
-  SysUtils;
+//uses
+//  Messages,
+//  CommCtrl,
+//  ComObj,
+//  Graphics,
+//  SysUtils;
 
 resourcestring
   sDropSourceBusy = 'A drag and drop operation is already in progress';
@@ -437,9 +443,6 @@ type
   public
     constructor Create(ADropSource: TCustomDropSource);
     destructor Destroy; override;
-{$ifndef VER21_PLUS}
-    procedure Start;
-{$endif}
     property DragResult: TDragResult read FDragResult;
     property Started: THandle read FStarted;
   end;
@@ -450,7 +453,7 @@ begin
   FreeOnTerminate := True;
   FDropSource := ADropSource;
   FDragResult := drAsync;
-  FStarted := Windows.CreateEvent(nil, False, False, nil);
+  FStarted := {$IF CompilerVersion >= 23.0}WinApi.{$ifend}Windows.CreateEvent(nil, False, False, nil);
 
   // Marshall interfaces to thread for use by DoDragDrop API function.
   OleCheck(CoMarshalInterThreadInterfaceInStream(IDataObject, FDropSource,
@@ -582,13 +585,6 @@ begin
     Terminate;
   end;
 end;
-
-{$ifndef VER21_PLUS}
-procedure TDropSourceThread.Start;
-begin
-  Resume;
-end;
-{$endif}
 
 // -----------------------------------------------------------------------------
 //                      TCustomDropSource
@@ -722,7 +718,11 @@ begin
   begin
     DragBitmap := TBitmap.Create;
     try
+      // see http://msdn.microsoft.com/en-us/library/windows/desktop/bb759778%28v=vs.85%29.aspx
       DragBitmap.PixelFormat := pfDevice;
+      {$if CompilerVersion >= 20.0}
+      DragBitmap.AlphaFormat := afDefined; // make sure alpha channel is not pre-multiplied
+      {$ifend}
 
       // TImageList.GetBitmap uses TImageList.Draw to extract the bitmap so we
       // must clear the destination bitmap before extraction.
@@ -731,25 +731,27 @@ begin
       DragBitmap.Canvas.FillRect(DragBitmap.Canvas.ClipRect);
       Images.GetBitmap(ImageIndex, DragBitmap);
       shDragImage.crColorKey := GetRGBColor(Images.BkColor);
-
-      shDragImage.hbmpDragImage := DragBitmap.Handle;
       shDragImage.sizeDragImage.cx := DragBitmap.Width;
       shDragImage.sizeDragImage.cy := DragBitmap.Height;
       shDragImage.ptOffset.x := ImageHotSpotX;
       shDragImage.ptOffset.y := ImageHotSpotY;
-
-      if (Succeeded(DragSourceHelper.InitializeFromBitmap(shDragImage, Self))) then
-      begin
-        // Apparently the bitmap is now owned by the drag/drop image handler...
-        // The documentation doesn't mention this explicitly, but the
-        // implemtation of Microsoft's SDK samples suggests that this is the
-        // case.
-        DragBitmap.ReleaseHandle;
-        Result := True;
-      end;
+      shDragImage.hbmpDragImage := DragBitmap.ReleaseHandle;
     finally
+      // Bitmap must not be bound to a device context before calling
+      // InitializeFromBitmap and device context must be freed.
       DragBitmap.Free;
+      // The bitmap itself still lives in shDragImage.hbmpDragImage
     end;
+
+    if (Succeeded(DragSourceHelper.InitializeFromBitmap(shDragImage, Self))) then
+    begin
+      // Apparently the bitmap is now owned by the drag/drop image handler...
+      // The documentation doesn't mention this explicitly, but the
+      // implemtation of Microsoft's SDK samples suggests that this is the
+      // case.
+      Result := True;
+    end else
+      DeleteObject(shDragImage.hbmpDragImage);
   end;
 end;
 
@@ -883,7 +885,7 @@ begin
       CloseHandle(FAsyncTargetEvent);
       FAsyncTargetEvent := 0;
     end;
-    FAsyncTargetEvent := Windows.CreateEvent(nil, False, False, nil);
+    FAsyncTargetEvent := {$IF CompilerVersion >= 23.0}WinApi.{$ifend}Windows.CreateEvent(nil, False, False, nil);
     FAsyncTargetTransfer := True;
     Result := S_OK;
   end else
@@ -1108,7 +1110,11 @@ begin
     try
       FDragInProgress := True;
       // ...and launch it.
+      {$if CompilerVersion >= 21.0}
       AsyncThread.Start;
+      {$else}
+      AsyncThread.Resume;
+      {$ifend}
 
       // Wait for thread to start.
       // If the thread takes longer than 10 seconds to start we assume that
@@ -1185,7 +1191,7 @@ end;
 
 procedure TCustomDropSource.DataChanging(Sender: TObject);
 begin
-  // Data is changing - Flush clipboard to freeze the contents. 
+  // Data is changing - Flush clipboard to freeze the contents.
   FlushClipboard;
 end;
 
@@ -1448,7 +1454,7 @@ begin
   // Must flush clipboard before data formats are destroyed. Otherwise clipboard
   // can be left with references to data which can no longer be supplied.
   FlushClipboard;
-  
+
   // Delete all target formats owned by the object
   for i := FDataFormats.Count-1 downto 0 do
     FDataFormats[i].Free;

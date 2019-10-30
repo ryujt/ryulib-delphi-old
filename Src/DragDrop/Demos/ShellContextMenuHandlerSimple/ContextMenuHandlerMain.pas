@@ -9,10 +9,10 @@ uses
 
 {$include 'DragDrop.inc'}
 
-{$ifndef VER13_PLUS}
-type
-  TDataModule = TForm;
-{$endif}
+//{$ifndef VER13_PLUS}
+//type
+//  TDataModule = TForm;
+//{$endif}
 
 type
   (*

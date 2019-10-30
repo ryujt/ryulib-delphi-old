@@ -1,28 +1,37 @@
 unit DragDropFile;
 // -----------------------------------------------------------------------------
-// Project:         Drag and Drop Component Suite.
-// Module:          DragDropFile
-// Description:     Implements Dragging and Dropping of files and folders.
-// Version:         5.2
-// Date:            17-AUG-2010
-// Target:          Win32, Delphi 5-2010
+// Project:         New Drag and Drop Component Suite
+// Module:          DragDrop
+// Description:     Implements base classes and utility functions.
+// Version:         5.7
+// Date:            28-FEB-2015
+// Target:          Win32, Win64, Delphi 6-XE7
 // Authors:         Anders Melander, anders@melander.dk, http://melander.dk
+// Latest Version   https://github.com/landrix/The-new-Drag-and-Drop-Component-Suite-for-Delphi
 // Copyright        © 1997-1999 Angus Johnson & Anders Melander
 //                  © 2000-2010 Anders Melander
+//                  © 2011-2015 Sven Harazim
 // -----------------------------------------------------------------------------
 
 interface
 
 uses
+  {$IF CompilerVersion >= 23.0}
+  System.SysUtils,System.Classes,System.Win.ComObj,System.RTLConsts,
+  {$IF CompilerVersion >= 25.0}System.AnsiStrings,{$IFEND}
+  WinApi.Windows,WinApi.ShlObj,WinApi.ActiveX,
+  Vcl.Controls,Vcl.Graphics,
+  {$ELSE}
+  SysUtils,Classes,ComObj,RTLConsts,
+  Windows,ShlObj,ActiveX,
+  Controls,Graphics,
+  {$ifend}
   DragDrop,
   DropTarget,
   DropSource,
   DragDropFormats,
-  DragDropText,
-  ShlObj,
-  ActiveX,
-  Windows,
-  Classes;
+  DragDropText
+  ;
 
 {$include DragDrop.inc}
 
@@ -246,7 +255,7 @@ type
     property Filename: UnicodeString read GetText write SetText;
   end;
 
-  TFilenameWClipboardFormat = TUnicodeFilenameClipboardFormat {$ifdef VER17_PLUS}deprecated {$IFDEF VER20_PLUS}'Use TUnicodeFilenameClipboardFormat instead'{$ENDIF}{$endif};
+  TFilenameWClipboardFormat = TUnicodeFilenameClipboardFormat {$IF CompilerVersion >= 17.0}deprecated {$IF CompilerVersion >= 20.0}'Use TUnicodeFilenameClipboardFormat instead'{$ifend}{$ifend};
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -301,7 +310,7 @@ type
     property FileMaps: TUnicodeStrings read FFileMaps;
   end;
 
-  TFilenameMapWClipboardFormat = TUnicodeFilenameMapClipboardFormat {$ifdef VER17_PLUS}deprecated {$IFDEF VER20_PLUS}'Use TUnicodeFilenameMapClipboardFormat instead'{$ENDIF}{$endif};
+  TFilenameMapWClipboardFormat = TUnicodeFilenameMapClipboardFormat {$IF CompilerVersion >= 17.0}deprecated {$IF CompilerVersion >= 20.0}'Use TUnicodeFilenameMapClipboardFormat instead'{$ifend}{$ifend};
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -445,7 +454,7 @@ type
     property Filenames[Index: integer]: UnicodeString read GetUnicodeFilename write SetUnicodeFilename;
   end;
 
-  TFileGroupDescriptorWClipboardFormat = TUnicodeFileGroupDescriptorClipboardFormat {$ifdef VER17_PLUS}deprecated {$IFDEF VER20_PLUS}'Use TUnicodeFileGroupDescriptorClipboardFormat instead'{$ENDIF}{$endif};
+  TFileGroupDescriptorWClipboardFormat = TUnicodeFileGroupDescriptorClipboardFormat {$IF CompilerVersion >= 17.0}deprecated {$IF CompilerVersion >= 20.0}'Use TUnicodeFileGroupDescriptorClipboardFormat instead'{$ifend}{$ifend};
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -671,19 +680,8 @@ function WriteFilesToZeroList(Data: pointer; Size: integer;
 implementation
 
 uses
-{$ifdef VER14_PLUS}
-  RTLConsts,
-{$else}
-  Consts,
-{$endif}
-  DragDropPIDL,
-  ComObj,
-  SysUtils;
+  DragDropPIDL;
 
-{$ifndef VER14_PLUS}
-const
-  sLineBreak = #13#10;
-{$endif}
 ////////////////////////////////////////////////////////////////////////////////
 //
 //              TAnsiStrings
@@ -1585,7 +1583,7 @@ begin
       end else
       begin
         s := Files[i];
-        StrPLCopy(p, AnsiString(s), Size);
+        {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrPLCopy(p, AnsiString(s), Size);
         StringSize := Length(s)+1;
       end;
       inc(p, StringSize);
@@ -2061,7 +2059,7 @@ begin
   if (Index >= Count) then
     raise Exception.CreateFmt('Filename index out of bounds (%d)', [Index]);
   SetLength(s, MAX_PATH);
-  StrLCopy(PAnsiChar(s), @FileGroupDescriptor^.fgd[Index].cFileName[0], MAX_PATH);
+  {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrLCopy(PAnsiChar(s), @FileGroupDescriptor^.fgd[Index].cFileName[0], MAX_PATH);
   Result := PAnsiChar(s);
 end;
 {$IFDEF R_PLUS}
@@ -2084,7 +2082,7 @@ procedure TAnsiFileGroupDescriptorClipboardFormat.SetAnsiFilename(Index: integer
 begin
   if (Index >= Count) then
     raise Exception.CreateFmt('Filename index out of bounds (%d)', [Index]);
-  StrPLCopy(@FileGroupDescriptor^.fgd[Index].cFileName[0], Value, MAX_PATH);
+  {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrPLCopy(@FileGroupDescriptor^.fgd[Index].cFileName[0], Value, MAX_PATH);
 end;
 {$IFDEF R_PLUS}
   {$RANGECHECKS ON}
@@ -2279,7 +2277,7 @@ var
   Name: string;
   MemStream: TMemoryStream;
   StatStg: TStatStg;
-  Size: longInt;
+  Size: {$if CompilerVersion < 29}LongInt{$else}FixedUInt{$ifend};
   Remaining: longInt;
   pChunk: PByte;
 begin
@@ -2347,7 +2345,7 @@ begin
           // have read data from the stream, so the next time we ask Outlook for
           // the same stream (e.g. by pasting the same attachment twice), we get
           // a stream where the current position is at EOS.
-          Stream.Seek(0, STREAM_SEEK_SET, PLargeint(nil)^);
+          Stream.Seek(0, STREAM_SEEK_SET, {$if CompilerVersion < 29}PLargeInt{$else}PUInt64{$ifend}(nil)^);
 
           while (Remaining > 0) do
           begin
@@ -2361,7 +2359,7 @@ begin
           // We reset the stream position here just to be nice to other
           // applications which might not have work arounds for this problem
           // (e.g. Windows Explorer).
-          Stream.Seek(0, STREAM_SEEK_SET, PLargeint(nil)^);
+          Stream.Seek(0, STREAM_SEEK_SET, {$if CompilerVersion < 29}PLargeInt{$else}PUInt64{$ifend}(nil)^);
 
           if (AFormatEtc.lindex > 0) then
             Name := FGD.Filenames[AFormatEtc.lindex-1];
@@ -2452,7 +2450,7 @@ var
   Index: integer;
   StatStg: TStatStg;
   Data: pointer;
-  ReadSize: longInt;
+  ReadSize: {$if CompilerVersion < 29}LongInt{$else}FixedUInt{$ifend};
 begin
   Result := False;
   Index := AFormatEtcIn.lindex;
@@ -2493,7 +2491,7 @@ begin
             try
               Data := GlobalLock(AMedium.hGlobal);
               try
-                OleCheck(Stream.Seek(0, STREAM_SEEK_SET, PLargeint(nil)^));
+                OleCheck(Stream.Seek(0, STREAM_SEEK_SET, {$if CompilerVersion < 29}PLargeInt{$else}PUInt64{$ifend}(nil)^));
                 OleCheck(Stream.Read(Data, StatStg.cbSize, @ReadSize));
                 Result := (ReadSize = StatStg.cbSize);
               finally

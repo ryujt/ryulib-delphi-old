@@ -1,6 +1,7 @@
 package DragDropDXE2;
 
 {$R *.res}
+{$R *.otares}
 {$R '..\Source\DragDrop.dcr'}
 {$R '..\Source\DragDropContext.dcr'}
 {$R '..\Source\DragDropFile.dcr'}
@@ -13,6 +14,7 @@ package DragDropDXE2;
 {$R '..\Source\DropHandler.dcr'}
 {$R '..\Source\DropSource.dcr'}
 {$R '..\Source\DropTarget.dcr'}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 4}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -34,21 +36,22 @@ package DragDropDXE2;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $456789}
+{$DEFINE DEBUG}
+{$DEFINE DEBUG}
+{$DEFINE DESIGNTIME}
+{$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Drag and Drop Component Suite'}
 {$DESIGNONLY}
 {$IMPLICITBUILD OFF}
-{$DEFINE DEBUG}
-{$DEFINE DESIGNTIME}
 
 requires
-  designide,
-  rtl;
+  rtl,
+  vcl;
 
 contains
   DragDrop in '..\Source\DragDrop.pas',
   DragDropComObj in '..\Source\DragDropComObj.pas',
   DragDropContext in '..\Source\DragDropContext.pas',
-  DragDropDesign in '..\Source\DragDropDesign.pas',
   DragDropFile in '..\Source\DragDropFile.pas',
   DragDropFormats in '..\Source\DragDropFormats.pas',
   DragDropGraphics in '..\Source\DragDropGraphics.pas',

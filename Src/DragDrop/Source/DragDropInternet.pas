@@ -1,27 +1,33 @@
 unit DragDropInternet;
 // -----------------------------------------------------------------------------
-// Project:         Drag and Drop Component Suite.
-// Module:          DragDropInternet
-// Description:     Implements Dragging and Dropping of internet related data.
-// Version:         5.2
-// Date:            17-AUG-2010
-// Target:          Win32, Delphi 5-2010
+// Project:         New Drag and Drop Component Suite
+// Module:          DragDrop
+// Description:     Implements base classes and utility functions.
+// Version:         5.7
+// Date:            28-FEB-2015
+// Target:          Win32, Win64, Delphi 6-XE7
 // Authors:         Anders Melander, anders@melander.dk, http://melander.dk
-// Copyright        ?1997-1999 Angus Johnson & Anders Melander
-//                  ?2000-2010 Anders Melander
+// Latest Version   https://github.com/landrix/The-new-Drag-and-Drop-Component-Suite-for-Delphi
+// Copyright        © 1997-1999 Angus Johnson & Anders Melander
+//                  © 2000-2010 Anders Melander
+//                  © 2011-2015 Sven Harazim
 // -----------------------------------------------------------------------------
 
 interface
 
 uses
+  {$IF CompilerVersion >= 23.0}
+  System.SysUtils,System.Classes,System.Win.ComObj,{$IF CompilerVersion >= 25.0}System.AnsiStrings,{$IFEND}
+  WinApi.Windows,WinApi.ShlObj,WinApi.ActiveX,
+  {$ELSE}
+  SysUtils,Classes,ComObj,
+  Windows,ShlObj,ActiveX,
+  {$ifend}
   DragDrop,
   DropTarget,
   DropSource,
   DragDropFormats,
-  DragDropText,
-  Windows,
-  Classes,
-  ActiveX;
+  DragDropText;
 
 {$include DragDrop.inc}
 
@@ -56,7 +62,7 @@ type
     property URL: UnicodeString read GetText write SetText;
   end;
 
-  TURLWClipboardFormat = TUnicodeURLClipboardFormat {$ifdef VER17_PLUS}deprecated {$IFDEF VER20_PLUS}'Use TURLWClipboardFormat instead'{$ENDIF}{$endif};
+  TURLWClipboardFormat = TUnicodeURLClipboardFormat {$IF CompilerVersion >= 17.0}deprecated {$IF CompilerVersion >= 20.0}'Use TURLWClipboardFormat instead'{$ifend}{$ifend};
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -94,7 +100,7 @@ type
     procedure Clear; override;
     property URL: AnsiString read FURL write FURL;
     property Title: AnsiString read FTitle write FTitle;
-  end {$ifdef VER15_PLUS} deprecated {$endif};
+  end {$IF CompilerVersion >= 15.0} deprecated {$ifend};
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -130,7 +136,7 @@ type
     property Extra: AnsiString read FExtra write FExtra;
     property Height: integer read FHeight write FHeight;
     property Width: integer read FWidth write FWidth;
-  end {$ifdef VER15_PLUS} deprecated {$endif};
+  end {$IF CompilerVersion >= 15.0} deprecated {$ifend};
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -393,9 +399,9 @@ var
   CloseIMsgSession: TCloseIMsgSession = nil;
 
 var
-  MAPI32: HMODULE = 0;
+  MAPI: HMODULE = 0;
 
-procedure LoadMAPI32;
+procedure LoadMAPI;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,9 +413,6 @@ procedure LoadMAPI32;
 implementation
 
 uses
-  SysUtils,
-  ShlObj,
-  ComObj,
   DragDropFile;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -469,7 +472,7 @@ begin
         begin
           s := AnsiString(URLFile[i]);
           p := PAnsiChar(s);
-          if (StrLIComp(p, 'URL=', length('URL=')) = 0) then
+          if ({$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrLIComp(p, 'URL=', length('URL=')) = 0) then
           begin
             inc(p, length('URL='));
             URL := p;
@@ -694,12 +697,12 @@ end;
 function TNetscapeBookmarkClipboardFormat.WriteData(Value: pointer;
   Size: integer): boolean;
 begin
-  StrLCopy(Value, PAnsiChar(FURL), Size);
+  {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrLCopy(Value, PAnsiChar(FURL), Size);
   dec(Size, 1024);
   if (Size > 0) and (FTitle <> '') then
   begin
     inc(PAnsiChar(Value), 1024);
-    StrLCopy(Value, PAnsiChar(FTitle), Size);
+    {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrLCopy(Value, PAnsiChar(FTitle), Size);
   end;
   Result := True;
 end;
@@ -791,13 +794,13 @@ begin
     NetscapeImageRec^.Height := FHeight;
     inc(PByte(Value), SizeOf(TNetscapeImageRec));
     dec(Size, SizeOf(TNetscapeImageRec));
-    StrLCopy(Value, PAnsiChar(FImage), Size);
+    {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrLCopy(Value, PAnsiChar(FImage), Size);
     dec(Size, Length(FImage)+1);
     if (Size <= 0) then
       exit;
     if (FLowRes <> '') then
     begin
-      StrLCopy(Value, PAnsiChar(FLowRes), Size);
+      {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrLCopy(Value, PAnsiChar(FLowRes), Size);
       NetscapeImageRec^.OfsLowRes := integer(Value) - integer(NetscapeImageRec);
       dec(Size, Length(FLowRes)+1);
       inc(PByte(Value), Length(FLowRes)+1);
@@ -806,7 +809,7 @@ begin
     end;
     if (FTitle <> '') then
     begin
-      StrLCopy(Value, PAnsiChar(FTitle), Size);
+      {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrLCopy(Value, PAnsiChar(FTitle), Size);
       NetscapeImageRec^.OfsTitle := integer(Value) - integer(NetscapeImageRec);
       dec(Size, Length(FTitle)+1);
       inc(PByte(Value), Length(FTitle)+1);
@@ -815,7 +818,7 @@ begin
     end;
     if (FUrl <> '') then
     begin
-      StrLCopy(Value, PAnsiChar(FUrl), Size);
+      {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrLCopy(Value, PAnsiChar(FUrl), Size);
       NetscapeImageRec^.OfsUrl := integer(Value) - integer(NetscapeImageRec);
       dec(Size, Length(FUrl)+1);
       inc(PByte(Value), Length(FUrl)+1);
@@ -824,7 +827,7 @@ begin
     end;
     if (FExtra <> '') then
     begin
-      StrLCopy(Value, PAnsiChar(FExtra), Size);
+      {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrLCopy(Value, PAnsiChar(FExtra), Size);
       NetscapeImageRec^.OfsExtra := integer(Value) - integer(NetscapeImageRec);
       dec(Size, Length(FExtra)+1);
       inc(PByte(Value), Length(FExtra)+1);
@@ -929,7 +932,7 @@ begin
   if (Result) then
   begin
     s := AnsiString(DOSStringToUnixString('begin:vcard'+#13+Items.Text+#13+'end:vcard'));
-    StrLCopy(Value, PAnsiChar(s), Size);
+    {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrLCopy(Value, PAnsiChar(s), Size);
   end;
 end;
 
@@ -1183,7 +1186,7 @@ begin
       Filename := AnsiString(Title)
     else
       Filename := URL;
-    StrPLCopy(@FGDA.fgd[0].cFileName[0], ConvertURLToFilename(Filename),
+    {$IF CompilerVersion >= 25.0}System.AnsiStrings.{$IFEND}StrPLCopy(@FGDA.fgd[0].cFileName[0], ConvertURLToFilename(Filename),
       SizeOf(FGDA.fgd[0].cFileName));
     FGDA.fgd[0].dwFlags := FD_LINKUI or FD_FILESIZE;
     FGDA.fgd[0].nFileSizeLow := Length(sInternetShortcut)+Length(URL)+8;
@@ -1426,33 +1429,41 @@ end;
 //
 ////////////////////////////////////////////////////////////////////////////////
 const
-  MAPI32DLL = 'mapi32.dll';
+  MAPIDLL = 'mapi32.dll';
 
-procedure LoadMAPI32;
+procedure LoadMAPI;
 
   procedure GetProc(const Name: AnsiString; var Func: pointer);
   begin
-    Func := GetProcAddress(MAPI32, PAnsiChar(Name));
+    Func := GetProcAddress(MAPI, PAnsiChar(Name));
     if (Func = nil) then
       raise Exception.CreateFmt('Failed to get %s entry point for %s: %s',
-        [MAPI32DLL, Name, SysErrorMessage(GetLastError)]);
+        [MAPIDLL, Name, SysErrorMessage(GetLastError)]);
   end;
 
 begin
-  if (MAPI32 = 0) then
+  if (MAPI = 0) then
   begin
-    MAPI32 := SafeLoadLibrary(MAPI32DLL);
-    if (MAPI32 <= HINSTANCE_ERROR) then
-      raise Exception.CreateFmt('%s: %s', [SysErrorMessage(GetLastError), MAPI32DLL]);
-    GetProc('MAPIGetDefaultMalloc@0', Pointer(@MAPIGetDefaultMalloc));
-    GetProc('MAPIInitialize', Pointer(@MAPIInitialize));
-    GetProc('MAPIUninitialize', Pointer(@MAPIUninitialize));
-    GetProc('MAPIAllocateBuffer', Pointer(@MAPIAllocateBuffer));
-    GetProc('MAPIAllocateMore', Pointer(@MAPIAllocateMore));
-    GetProc('MAPIFreeBuffer', Pointer(@MAPIFreeBuffer));
-    GetProc('OpenIMsgOnIStg@44', Pointer(@OpenIMsgOnIStg));
-    GetProc('OpenIMsgSession@12', Pointer(@OpenIMsgSession));
-    GetProc('CloseIMsgSession@4', Pointer(@CloseIMsgSession));
+    MAPI := SafeLoadLibrary(MAPIDLL);
+    if (MAPI <= HINSTANCE_ERROR) then
+      raise Exception.CreateFmt('%s: %s', [SysErrorMessage(GetLastError), MAPIDLL]);
+{$IFDEF WIN32}
+    GetProc('MAPIGetDefaultMalloc@0', pointer( @MAPIGetDefaultMalloc));
+    GetProc('OpenIMsgOnIStg@44', pointer(@OpenIMsgOnIStg));
+    GetProc('OpenIMsgSession@12', pointer(@OpenIMsgSession));
+    GetProc('CloseIMsgSession@4', pointer(@CloseIMsgSession));
+{$ENDIF}
+{$IFDEF WIN64}
+    GetProc('MAPIGetDefaultMalloc', pointer( @MAPIGetDefaultMalloc));
+    GetProc('OpenIMsgOnIStg', pointer(@OpenIMsgOnIStg));
+    GetProc('OpenIMsgSession', pointer(@OpenIMsgSession));
+    GetProc('CloseIMsgSession', pointer(@CloseIMsgSession));
+{$ENDIF}
+    GetProc('MAPIInitialize', pointer(@MAPIInitialize));
+    GetProc('MAPIUninitialize', pointer(@MAPIUninitialize));
+    GetProc('MAPIAllocateBuffer', pointer(@MAPIAllocateBuffer));
+    GetProc('MAPIAllocateMore', pointer(@MAPIAllocateMore));
+    GetProc('MAPIFreeBuffer', pointer(@MAPIFreeBuffer));
   end;
 end;
 
@@ -1469,7 +1480,7 @@ begin
 
   if (FSessionCount = 0) then
   begin
-    LoadMAPI32;
+    LoadMAPI;
     Malloc := IMalloc(MAPIGetDefaultMalloc);
     OleCheck(OpenIMsgSession(Malloc, 0, FSession));
     inc(FSessionCount);
@@ -1545,14 +1556,20 @@ begin
 
   if (FMessages[Index] = nil) then
   begin
-    LoadMAPI32;
+    LoadMAPI;
     BeginSession;
 
     // Get IMessage from IStorage
     OleCheck(OpenIMsgOnIStg(FSession,
+    {$IF CompilerVersion >= 25.0}
       Pointer(@MAPIAllocateBuffer),
       Pointer(@MAPIAllocateMore),
       Pointer(@MAPIFreeBuffer),
+    {$ELSE}
+      @MAPIAllocateBuffer,
+      @MAPIAllocateMore,
+      @MAPIFreeBuffer,
+    {$ifend}
       IMalloc(MapiGetDefaultMalloc),
       nil,
       FStorages[Index],
@@ -1709,4 +1726,3 @@ initialization
 
 finalization
 end.
-

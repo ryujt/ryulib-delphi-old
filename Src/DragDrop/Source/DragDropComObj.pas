@@ -1,22 +1,29 @@
 unit DragDropComObj;
 // -----------------------------------------------------------------------------
-// Project:         Drag and Drop Component Suite.
-// Module:          DragDropComObj
-// Description:     Implements misc COM support classes.
-// Version:         5.2
-// Date:            17-AUG-2010
-// Target:          Win32, Delphi 5-2010
+// Project:         New Drag and Drop Component Suite
+// Module:          DragDrop
+// Description:     Implements base classes and utility functions.
+// Version:         5.7
+// Date:            28-FEB-2015
+// Target:          Win32, Win64, Delphi 6-XE7
 // Authors:         Anders Melander, anders@melander.dk, http://melander.dk
-// Copyright        ?1997-1999 Angus Johnson & Anders Melander
-//                  ?2000-2010 Anders Melander
+// Latest Version   https://github.com/landrix/The-new-Drag-and-Drop-Component-Suite-for-Delphi
+// Copyright        © 1997-1999 Angus Johnson & Anders Melander
+//                  © 2000-2010 Anders Melander
+//                  © 2011-2015 Sven Harazim
 // -----------------------------------------------------------------------------
 
 interface
 
 uses
-  ComObj,
-  Classes,
-  ActiveX;
+  {$IF CompilerVersion >= 23.0}
+  System.SysUtils,System.Classes,System.Win.ComObj,
+  WinApi.Windows,WinApi.ActiveX
+  {$ELSE}
+  SysUtils,Classes,ComObj,
+  Windows,ActiveX
+  {$ifend}
+  ;
 
 {$include DragDrop.inc}
 
@@ -115,10 +122,6 @@ function DeleteEmptyRegKey(Key: string; DeleteTree: boolean = True): Boolean;
 ////////////////////////////////////////////////////////////////////////////////
 implementation
 
-uses
-  SysUtils,
-  Windows;
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //              Utility functions
@@ -139,7 +142,7 @@ end;
 function DeleteEmptyRegKey(Key: string; DeleteTree: boolean = True): Boolean;
 var
   SubKey: HKey;
-  NumSubKeys, NumValues: DWORD;
+  NumSubKeys, NumValues: PDWORD;
   p: PChar;
 begin
   p := nil;
@@ -147,10 +150,13 @@ begin
     Result := False;
     if (RegOpenKey(HKEY_CLASSES_ROOT, PChar(Key), SubKey) = ERROR_SUCCESS) then
       try
-        Result := (RegQueryInfoKey(SubKey, nil, nil, nil, Pointer(@NumSubKeys), nil, nil,
-          Pointer(@NumValues), nil, nil, nil, nil) = ERROR_SUCCESS);
+        NumSubKeys := nil;
+        NumValues := nil;
+        Result := (RegQueryInfoKey(SubKey, nil, nil, nil, NumSubKeys, nil, nil,
+          NumValues, nil, nil, nil, nil) = ERROR_SUCCESS);
         // Only delete key if it doesn't contain values or sub keys.
-        Result := Result and (NumSubKeys = 0) and (NumValues = 0);
+        if (NumSubKeys <> nil) and (NumValues <> nil) then
+          Result := Result and (NumSubKeys^ = 0) and (NumValues^ = 0);
       finally
         RegCloseKey(SubKey);
       end;

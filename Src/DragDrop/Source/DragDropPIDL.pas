@@ -1,28 +1,34 @@
 unit DragDropPIDL;
 // -----------------------------------------------------------------------------
-// Project:         Drag and Drop Component Suite
-// Module:          DragDropPIDL
-// Description:     Implements Dragging & Dropping of PIDLs (files and folders).
-// Version:         5.2
-// Date:            17-AUG-2010
-// Target:          Win32, Delphi 5-2010
+// Project:         New Drag and Drop Component Suite
+// Module:          DragDrop
+// Description:     Implements base classes and utility functions.
+// Version:         5.7
+// Date:            28-FEB-2015
+// Target:          Win32, Win64, Delphi 6-XE7
 // Authors:         Anders Melander, anders@melander.dk, http://melander.dk
+// Latest Version   https://github.com/landrix/The-new-Drag-and-Drop-Component-Suite-for-Delphi
 // Copyright        © 1997-1999 Angus Johnson & Anders Melander
 //                  © 2000-2010 Anders Melander
+//                  © 2011-2015 Sven Harazim
 // -----------------------------------------------------------------------------
 
 interface
 
 uses
+  {$IF CompilerVersion >= 23.0}
+  System.SysUtils,System.Classes,
+  WinApi.Windows,WinApi.ShellAPI,WinApi.ActiveX,WinApi.ShlObj,
+  {$ELSE}
+  SysUtils,Classes,
+  Windows,ShellAPI,ActiveX,ShlObj,
+  {$ifend}
   DragDrop,
   DropTarget,
   DropSource,
   DragDropFormats,
-  DragDropFile,
-  Windows,
-  ActiveX,
-  Classes,
-  ShlObj;
+  DragDropFile
+  ;
 
 {$include DragDrop.inc}
 
@@ -244,11 +250,11 @@ function ILIsEqual(Pidl1, Pidl2: PItemIDList): LongBool; stdcall;
 function ILCombine(Pidl1, Pidl2: PItemIDList): PItemIDList; stdcall;
 function ILGetSize(Pidl: PItemIDList): Word; stdcall;
 function ILGetNext(Pidl: PItemIDList): PItemIDList; stdcall;
-procedure ILFree(Pidl: PItemIDList); stdcall; {$ifdef VER15_PLUS} deprecated; {$endif}
+procedure ILFree(Pidl: PItemIDList); stdcall; {$IF CompilerVersion >= 15.0} deprecated; {$ifend}
 
 // Undocumented IMalloc utility functions...
-function SHAlloc(BufferSize: ULONG): Pointer; stdcall; {$ifdef VER15_PLUS} deprecated; {$endif}
-procedure SHFree(Buffer: Pointer); stdcall; {$ifdef VER15_PLUS} deprecated; {$endif}
+function SHAlloc(BufferSize: ULONG): Pointer; stdcall; {$IF CompilerVersion >= 15.0} deprecated; {$ifend}
+procedure SHFree(Buffer: Pointer); stdcall; {$IF CompilerVersion >= 15.0} deprecated; {$ifend}
 
 {$else}
 
@@ -296,10 +302,6 @@ function GetSubPIDL(Folder: IShellFolder; const Sub: UnicodeString): pItemIDList
 
 implementation
 
-uses
-  ShellAPI,
-  SysUtils;
-
 resourcestring
   sNoFolderPIDL = 'Folder PIDL must be added first';
 
@@ -333,7 +335,7 @@ function ILGetSize(Pidl: PItemIDList): Word; stdcall;
 function ILGetNext(Pidl: PItemIDList): PItemIDList; stdcall;
   external shell32 index 153;
 
-procedure ILFree(Pidl: PItemIDList); stdcall {$ifdef VER15_PLUS} deprecated {$endif};
+procedure ILFree(Pidl: PItemIDList); stdcall {$IF CompilerVersion >= 15.0} deprecated {$ifend};
   external shell32 index 155;
 
 (* TODO : Unused IL functions:
@@ -358,8 +360,8 @@ function ILGetCount(Pidl: PItemIDList): integer; stdcall;
 
 *)
 
-procedure SHFree(Buffer: Pointer); stdcall {$ifdef VER15_PLUS} deprecated {$endif}; external shell32 index 195;
-function SHAlloc(BufferSize: ULONG): Pointer; stdcall {$ifdef VER15_PLUS} deprecated {$endif}; external shell32 index 196;
+procedure SHFree(Buffer: Pointer); stdcall {$IF CompilerVersion >= 15.0} deprecated {$ifend}; external shell32 index 195;
+function SHAlloc(BufferSize: ULONG): Pointer; stdcall {$IF CompilerVersion >= 15.0} deprecated {$ifend}; external shell32 index 196;
 {$endif}
 
 

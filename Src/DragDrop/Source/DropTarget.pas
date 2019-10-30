@@ -1,26 +1,36 @@
 unit DropTarget;
 // -----------------------------------------------------------------------------
-// Project:         Drag and Drop Component Suite
-// Module:          DropTarget
-// Description:     Implements the drop target base classes which allows your
-//                  application to accept data dropped on it from other
-//                  applications.
-// Version:         5.2
-// Date:            17-AUG-2010
-// Target:          Win32, Delphi 5-2010
+// Project:         New Drag and Drop Component Suite
+// Module:          DragDrop
+// Description:     Implements base classes and utility functions.
+// Version:         5.7
+// Date:            28-FEB-2015
+// Target:          Win32, Win64, Delphi 6-XE7
 // Authors:         Anders Melander, anders@melander.dk, http://melander.dk
-// Copyright        © 1997-1999 Angus Johnson & Anders Melander
-//                  © 2000-2010 Anders Melander
+// Latest Version   https://github.com/landrix/The-new-Drag-and-Drop-Component-Suite-for-Delphi
+// Copyright        Â© 1997-1999 Angus Johnson & Anders Melander
+//                  Â© 2000-2010 Anders Melander
+//                  Â© 2011-2015 Sven Harazim
+// Changes          Add WinTarget property for running without TWinControl Target
+//                  04.09.2014 by Manfred Suesens DUERR Systems GmbH
 // -----------------------------------------------------------------------------
 
 interface
 
 uses
-  DragDrop,
-  Windows, ActiveX, Classes, Controls, CommCtrl, ExtCtrls, Forms;
+  {$IF CompilerVersion >= 23.0}
+  System.SysUtils,System.Classes,System.Win.ComObj,System.Types,System.UITypes,
+  WinApi.Windows,WinApi.ActiveX,Winapi.Messages,Winapi.CommCtrl,Winapi.ShlObj,
+  Vcl.Controls,Vcl.Graphics,Vcl.ExtCtrls,Vcl.Forms,Vcl.ClipBrd,Vcl.ComCtrls,Vcl.Dialogs,
+  {$ELSE}
+  SysUtils,Classes,ComObj,
+  Windows,ActiveX,Messages,CommCtrl,ShlObj,
+  Controls,Graphics,ExtCtrls,Forms,ClipBrd,ComCtrls,Dialogs,
+  {$ifend}
+  DragDrop,DragDropFormats;
 
 {$include DragDrop.inc}
-{$ifdef VER135_PLUS}
+{$IFDEF BCB}
 // shldisp.h only exists in C++Builder 5 and later.
 {$HPPEMIT '#include <shldisp.h>'}
 {$endif}
@@ -64,7 +74,7 @@ type
 type
   TScrollDirection = (sdUp, sdDown, sdLeft, sdRight);
   TScrollDirections = set of TScrollDirection;
-  TScrolDirections = TScrollDirections {$ifdef VER17_PLUS}deprecated{$endif};
+  TScrolDirections = TScrollDirections {$IF CompilerVersion >= 17.0}deprecated{$ifend};
 
   TDropTargetScrollEvent = procedure(Sender: TObject; Point: TPoint;
     var Scroll: TScrollDirections; var Interval: integer) of object;
@@ -80,10 +90,10 @@ type
   end;
 
 {$ifdef BCB}
-{$ifndef VER145_PLUS}
+{$IF CompilerVersion < 14.0}
 {$hppemit '// Hack to trick C++Builder 4/5 into using a default value for the Unregister methods parameter' }
 {$hppemit '#define ATarget_with_default ATarget = NULL' }
-{$endif}
+{$ifend}
 {$endif}
   TCustomDropTarget = class(TDragDropComponent, IDropTarget)
   private
@@ -100,6 +110,7 @@ type
     FMultiTarget: boolean;
     FOptimizedMove: boolean;
     FTarget: TWinControl;
+    FWinTarget: HWND;
 
     FImages: TImageList;
     FDragImageHandle: HImageList;
@@ -154,7 +165,9 @@ type
     procedure DoUnregister(ATarget: TWinControl);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     function GetTarget: TWinControl;
+    function GetWinTarget: HWND;
     procedure SetTarget(const Value: TWinControl);
+    procedure SetWinTarget(const Value: HWND);
     procedure DoAutoScroll(Sender: TObject);
     function SampleMouse(MousePos: TPoint; First: boolean = False): boolean;
     procedure SetShowImage(Show: boolean);
@@ -202,6 +215,7 @@ type
     property ShowImage: boolean read FShowImage write SetShowImage default True;
     // Target
     property Target: TWinControl read GetTarget write SetTarget;
+    property WinTarget: HWND read GetWinTarget write SetWinTarget;
     property MultiTarget: boolean read FMultiTarget write FMultiTarget default False;
     property AutoRegister: boolean read FAutoRegister write FAutoRegister default True;
     // Auto-scroll
@@ -222,7 +236,7 @@ type
 // Replaced by the TCustomDropTarget class.
 ////////////////////////////////////////////////////////////////////////////////
   TDropTarget = class(TCustomDropTarget)
-  end {$ifdef VER17_PLUS}deprecated {$IFDEF VER20_PLUS}'Use TCustomDropTarget instead'{$ENDIF}{$endif};
+  end {$IF CompilerVersion >= 17.0}deprecated {$IF CompilerVersion >= 20.0}'Use TCustomDropTarget instead'{$ifend}{$ifend};
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -295,17 +309,6 @@ type
 **
 *******************************************************************************)
 implementation
-
-uses
-  DragDropFormats,
-  ComObj,
-  SysUtils,
-  Graphics,
-  Messages,
-  ShlObj,
-  ClipBrd,
-  Dialogs,
-  ComCtrls;
 
 resourcestring
   sTargetAsyncBusy = 'Can''t clear data while async data transfer is in progress';
@@ -461,13 +464,16 @@ begin
     ** Note also that if no target control exists, the mouse coordinates are
     ** relative to the screen, not the control as is normally the case.
     *)
-    if (FTarget = nil) then
+    if (FTarget = nil) and (FWinTarget = 0) then
     begin
       ShowImage := False;
       AutoScroll := False;
-    end else
+    end else 
     begin
-      ClientPt := FTarget.ScreenToClient(pt);
+      if FTarget = nil then
+        ClientPt := pt   //transfer screen coordinates
+      else
+        ClientPt := FTarget.ScreenToClient(pt);
       FLastPoint := ClientPt;
     end;
 
@@ -543,7 +549,11 @@ begin
         // Note: According to .\Samples\winui\Shell\DragImg\DragImg.doc from the
         // Platform SDK, the return value of IDropTargetHelper.DragEnter should
         // be ignored, but my tests show that it shouldn't.
-        if (Failed(DropTargetHelper.DragEnter(FTarget.Handle, DataObj, pt, dwEffect))) then
+        if FTarget = nil then begin
+          if (Failed(DropTargetHelper.DragEnter(FWinTarget, DataObj, pt, dwEffect))) then
+            FDropTargetHelper := nil;
+        end else
+          if (Failed(DropTargetHelper.DragEnter(FTarget.Handle, DataObj, pt, dwEffect))) then
           FDropTargetHelper := nil;
       end;
 
@@ -555,8 +565,12 @@ begin
           // Currently we will just replace any 'embedded' cursor with our
           // blank (transparent) image otherwise we sometimes get 2 cursors ...
           ImageList_SetDragCursorImage(FImages.Handle, 0, FImageHotSpot.x, FImageHotSpot.y);
-          with ClientPtToWindowPt(FTarget.Handle, ClientPt) do
-            ImageList_DragEnter(FTarget.handle, x, y);
+          if FTarget = nil then begin
+            with ClientPtToWindowPt(FWinTarget, ClientPt) do
+              ImageList_DragEnter(FWinTarget, x, y);
+          end else
+            with ClientPtToWindowPt(FTarget.Handle, ClientPt) do
+              ImageList_DragEnter(FTarget.handle, x, y);
         end;
       end;
     end else
@@ -585,7 +599,7 @@ var
 begin
   // Refuse drop if we dermined in DragEnter that a drop weren't possible,
   // but still handle drag images provided we have a valid target.
-  if (FTarget = nil) then
+  if (FTarget = nil) and (FWinTarget = 0) then
   begin
     dwEffect := DROPEFFECT_NONE;
     Result := E_UNEXPECTED;
@@ -593,7 +607,10 @@ begin
   end;
 
   try
-    ClientPt := FTarget.ScreenToClient(pt);
+    if FTarget = nil then
+      ClientPt := pt      //transfer screen coordinates
+    else
+      ClientPt := FTarget.ScreenToClient(pt);
 
     ShiftState := KeysToShiftStatePlus(grfKeyState);
 
@@ -884,9 +901,9 @@ type
     constructor Create(ADropTarget: TCustomDropTarget;
       const ADataObject: IDataObject; AEffect: Longint);
     destructor Destroy; override;
-{$ifndef VER21_PLUS}
+{$IF CompilerVersion < 21.0}
     procedure Start;
-{$endif}
+{$ifend}
     property DropTarget: TCustomDropTarget read FDropTarget;
     property DataObject: IDataObject read FDataObject;
     property Effect: Longint read FEffect;
@@ -957,12 +974,12 @@ begin
   end;
 end;
 
-{$ifndef VER21_PLUS}
+{$IF CompilerVersion < 21.0}
 procedure TDropTargetTransferThread.Start;
 begin
   Resume;
 end;
-{$endif}
+{$ifend}
 
 procedure TCustomDropTarget.DoEndAsyncTransfer(Sender: TObject);
 begin
@@ -1348,6 +1365,11 @@ begin
 *)
 end;
 
+function TCustomDropTarget.GetWinTarget: HWND;
+begin
+  Result := FWinTarget;
+end;
+
 resourcestring
   sRichEditWarning =
     'It is strongly recommended that you set the AutoRegister'+#13+
@@ -1379,9 +1401,24 @@ begin
   begin
     // If MultiTarget isn't enabled, Register will automatically unregister so
     // no need to do it here.
-    if (FMultiTarget) and not(csLoading in ComponentState) then
+    if (not FMultiTarget) and not(csLoading in ComponentState) then
       Unregister;
     Register(Value);
+  end;
+end;
+
+procedure TCustomDropTarget.SetWinTarget(const Value: HWND);
+var
+  res: HResult;
+begin
+  if (FWinTarget = Value) then
+    exit;
+  AutoRegister := False;
+  FWinTarget := Value;
+  res:=RegisterDragDrop(FWinTarget, Self);
+  if res = DRAGDROP_E_ALREADYREGISTERED then begin
+    RevokeDragDrop(FWinTarget);
+    OleCheck(RegisterDragDrop(FWinTarget, Self));
   end;
 end;
 
@@ -1455,11 +1492,14 @@ function TCustomDropTarget.SetPasteSucceeded(Effect: LongInt): boolean;
 var
   Medium: TStgMedium;
 begin
+  Result := false;
   with TPasteSucceededClipboardFormat.Create do
     try
       Value := Effect;
       Result := SetData(DataObject, FormatEtc, Medium);
     finally
+      if Result then
+        ReleaseStgMedium(Medium);
       Free;
     end;
 end;
@@ -1468,11 +1508,14 @@ function TCustomDropTarget.SetPerformedDropEffect(Effect: longInt): boolean;
 var
   Medium: TStgMedium;
 begin
+  Result := false;
   with TPerformedDropEffectClipboardFormat.Create do
     try
       Value := Effect;
       Result := SetData(DataObject, FormatEtc, Medium);
     finally
+      if Result then
+        ReleaseStgMedium(Medium);
       Free;
     end;
 end;
