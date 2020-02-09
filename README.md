@@ -1,4 +1,4 @@
-# RyuLib for Delphi
+# RyuLib for Delphi (deprecated)
 My Delphi library collections.
 
 ## 참고 사이트
